@@ -42,7 +42,7 @@
 
     //init modelSource
     self.modelSource = [[NSMutableArray alloc]init];
-    for (int i=0; i<50; i++){
+    for (int i=0; i<100; i++){
         [self.modelSource addObject:[NSString stringWithFormat:@"book %d", i]];
     }
 }
