@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7550AA0E1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 7550AA0D1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m */; };
 		75B3E8F81D5D6209008280B8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B3E8F71D5D6209008280B8 /* main.m */; };
 		75B3E8FB1D5D6209008280B8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B3E8FA1D5D6209008280B8 /* AppDelegate.m */; };
 		75B3E8FE1D5D6209008280B8 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B3E8FD1D5D6209008280B8 /* ViewController.m */; };
@@ -38,6 +39,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7550AA0C1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookshelfCollectionViewFlowLayout.h; sourceTree = "<group>"; };
+		7550AA0D1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookshelfCollectionViewFlowLayout.m; sourceTree = "<group>"; };
 		75B3E8F31D5D6209008280B8 /* ShelfCollectionView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShelfCollectionView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75B3E8F71D5D6209008280B8 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		75B3E8F91D5D6209008280B8 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -85,10 +88,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7550AA0B1D62F50C001FEFB0 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				7550AA0C1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.h */,
+				7550AA0D1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m */,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
 		75B3E8EA1D5D6209008280B8 = {
 			isa = PBXGroup;
 			children = (
 				75B3E8F51D5D6209008280B8 /* ShelfCollectionView */,
+				7550AA0B1D62F50C001FEFB0 /* Library */,
 				75B3E90F1D5D6209008280B8 /* ShelfCollectionViewTests */,
 				75B3E91A1D5D6209008280B8 /* ShelfCollectionViewUITests */,
 				75B3E8F41D5D6209008280B8 /* Products */,
@@ -286,6 +299,7 @@
 				75B3E8FE1D5D6209008280B8 /* ViewController.m in Sources */,
 				75B3E9381D5D6F7D008280B8 /* BookCollectionViewCell.m in Sources */,
 				75B3E8FB1D5D6209008280B8 /* AppDelegate.m in Sources */,
+				7550AA0E1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m in Sources */,
 				75B3E8F81D5D6209008280B8 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -512,6 +526,7 @@
 				75B3E9221D5D6209008280B8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		75B3E9231D5D6209008280B8 /* Build configuration list for PBXNativeTarget "ShelfCollectionViewTests" */ = {
 			isa = XCConfigurationList;
@@ -520,6 +535,7 @@
 				75B3E9251D5D6209008280B8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		75B3E9261D5D6209008280B8 /* Build configuration list for PBXNativeTarget "ShelfCollectionViewUITests" */ = {
 			isa = XCConfigurationList;
@@ -528,6 +544,7 @@
 				75B3E9281D5D6209008280B8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
