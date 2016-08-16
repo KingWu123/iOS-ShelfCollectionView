@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="BookCollectionViewCell" id="gTV-IL-0wX" customClass="BookCollectionViewCell">
+            <rect key="frame" x="0.0" y="0.0" width="125" height="140"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
+                <rect key="frame" x="0.0" y="0.0" width="125" height="140"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bookimage.png" translatesAutoresizingMaskIntoConstraints="NO" id="8sh-Oy-QIN">
+                        <rect key="frame" x="5" y="5" width="115" height="130"/>
+                    </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GsJ-xb-hLG">
+                        <rect key="frame" x="42" y="60" width="42" height="21"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            </view>
+            <constraints>
+                <constraint firstItem="GsJ-xb-hLG" firstAttribute="centerY" secondItem="gTV-IL-0wX" secondAttribute="centerY" id="Uat-eE-zvE"/>
+                <constraint firstAttribute="bottom" secondItem="8sh-Oy-QIN" secondAttribute="bottom" constant="5" id="ajK-96-0Jc"/>
+                <constraint firstAttribute="trailing" secondItem="8sh-Oy-QIN" secondAttribute="trailing" constant="5" id="h9B-NZ-zyn"/>
+                <constraint firstItem="8sh-Oy-QIN" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" constant="5" id="maX-Hd-XSq"/>
+                <constraint firstItem="8sh-Oy-QIN" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" constant="5" id="rDG-MO-no0"/>
+                <constraint firstItem="GsJ-xb-hLG" firstAttribute="centerX" secondItem="gTV-IL-0wX" secondAttribute="centerX" id="z1c-Gk-ylX"/>
+            </constraints>
+            <connections>
+                <outlet property="numberIndexLabel" destination="GsJ-xb-hLG" id="adU-qB-VOA"/>
+            </connections>
+            <point key="canvasLocation" x="268" y="326"/>
+        </collectionViewCell>
+    </objects>
+    <resources>
+        <image name="bookimage.png" width="75" height="105"/>
+    </resources>
+</document>

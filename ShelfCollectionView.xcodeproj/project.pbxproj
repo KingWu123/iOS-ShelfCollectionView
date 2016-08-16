@@ -15,6 +15,9 @@
 		75B3E9061D5D6209008280B8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 75B3E9041D5D6209008280B8 /* LaunchScreen.storyboard */; };
 		75B3E9111D5D6209008280B8 /* ShelfCollectionViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B3E9101D5D6209008280B8 /* ShelfCollectionViewTests.m */; };
 		75B3E91C1D5D6209008280B8 /* ShelfCollectionViewUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B3E91B1D5D6209008280B8 /* ShelfCollectionViewUITests.m */; };
+		75B3E92A1D5D6ECA008280B8 /* bookimage@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 75B3E9291D5D6ECA008280B8 /* bookimage@2x.png */; };
+		75B3E9381D5D6F7D008280B8 /* BookCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B3E9361D5D6F7D008280B8 /* BookCollectionViewCell.m */; };
+		75B3E9391D5D6F7D008280B8 /* BookCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 75B3E9371D5D6F7D008280B8 /* BookCollectionViewCell.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +54,10 @@
 		75B3E9171D5D6209008280B8 /* ShelfCollectionViewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShelfCollectionViewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		75B3E91B1D5D6209008280B8 /* ShelfCollectionViewUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShelfCollectionViewUITests.m; sourceTree = "<group>"; };
 		75B3E91D1D5D6209008280B8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		75B3E9291D5D6ECA008280B8 /* bookimage@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bookimage@2x.png"; sourceTree = "<group>"; };
+		75B3E9351D5D6F7D008280B8 /* BookCollectionViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookCollectionViewCell.h; sourceTree = "<group>"; };
+		75B3E9361D5D6F7D008280B8 /* BookCollectionViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookCollectionViewCell.m; sourceTree = "<group>"; };
+		75B3E9371D5D6F7D008280B8 /* BookCollectionViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BookCollectionViewCell.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,9 +113,13 @@
 				75B3E8FC1D5D6209008280B8 /* ViewController.h */,
 				75B3E8FD1D5D6209008280B8 /* ViewController.m */,
 				75B3E8FF1D5D6209008280B8 /* Main.storyboard */,
+				75B3E9351D5D6F7D008280B8 /* BookCollectionViewCell.h */,
+				75B3E9361D5D6F7D008280B8 /* BookCollectionViewCell.m */,
+				75B3E9371D5D6F7D008280B8 /* BookCollectionViewCell.xib */,
 				75B3E9021D5D6209008280B8 /* Assets.xcassets */,
 				75B3E9041D5D6209008280B8 /* LaunchScreen.storyboard */,
 				75B3E9071D5D6209008280B8 /* Info.plist */,
+				75B3E9291D5D6ECA008280B8 /* bookimage@2x.png */,
 				75B3E8F61D5D6209008280B8 /* Supporting Files */,
 			);
 			path = ShelfCollectionView;
@@ -246,6 +257,8 @@
 				75B3E9061D5D6209008280B8 /* LaunchScreen.storyboard in Resources */,
 				75B3E9031D5D6209008280B8 /* Assets.xcassets in Resources */,
 				75B3E9011D5D6209008280B8 /* Main.storyboard in Resources */,
+				75B3E92A1D5D6ECA008280B8 /* bookimage@2x.png in Resources */,
+				75B3E9391D5D6F7D008280B8 /* BookCollectionViewCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,6 +284,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				75B3E8FE1D5D6209008280B8 /* ViewController.m in Sources */,
+				75B3E9381D5D6F7D008280B8 /* BookCollectionViewCell.m in Sources */,
 				75B3E8FB1D5D6209008280B8 /* AppDelegate.m in Sources */,
 				75B3E8F81D5D6209008280B8 /* main.m in Sources */,
 			);
