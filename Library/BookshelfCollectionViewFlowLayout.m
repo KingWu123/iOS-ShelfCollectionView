@@ -154,8 +154,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 
-//判断移动的item是否要换到新的位置
-- (void)invalidateLayoutIfNecessary {
+//判断选中的item是否要换到新的位置
+- (void)ajustItemIndexpathIfNecessary {
     NSIndexPath *newIndexPath = [self.collectionView indexPathForItemAtPoint:self.selectedSnapShotView.center];
     NSIndexPath *previousIndexPath = self.selectedItemCurrentIndexPath;
     
@@ -362,7 +362,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             //update snapshotView center
             CGPoint viewCenter = self.selectedSnapShotView.center = BS_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
             
-            [self invalidateLayoutIfNecessary];
+            [self ajustItemIndexpathIfNecessary];
             
             CGFloat width = self.selectedSnapShotView.frame.size.width;
             CGFloat hegiht = self.selectedSnapShotView.frame.size.height;
@@ -414,7 +414,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 - (void)handleScroll:(CADisplayLink *)displayLink{
-     NSLog(@"frame = %ld, timeStap = %f, duration = %f", self.displayLink.frameInterval, self.displayLink.timestamp, self.displayLink.duration);
     
     BookShelfScrollingDirection direction = (BookShelfScrollingDirection)[displayLink.BS_userInfo[kBSScrollingDirectionKey] integerValue];
     if (direction == BookShelfScrollingDirectionUnknown) {
@@ -478,7 +477,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.selectedSnapShotView.center = BS_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
     self.collectionView.contentOffset = BS_CGPointAdd(contentOffset, translation);
     
-    [self invalidateLayoutIfNecessary];
+    [self ajustItemIndexpathIfNecessary];
 }
 
 //根据超出的距离，滚动的速度有个变化
@@ -492,11 +491,12 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect {
     
-    NSArray *layoutAttributesForElementsInRect = [super layoutAttributesForElementsInRect:rect];
-    for (UICollectionViewLayoutAttributes *layoutAttributes in layoutAttributesForElementsInRect) {
-        switch (layoutAttributes.representedElementCategory) {
+    NSArray *layoutAttributes = [super layoutAttributesForElementsInRect:rect];
+    
+    for (UICollectionViewLayoutAttributes *attribute in layoutAttributes) {
+        switch (attribute.representedElementCategory) {
             case UICollectionElementCategoryCell: {
-                [self applyLayoutAttributes:layoutAttributes];
+                [self applyLayoutAttributes:attribute];
             } break;
             default: {
                 // Do nothing...
@@ -504,11 +504,16 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         }
     }
     
-    return layoutAttributesForElementsInRect;
+    //上对齐
+    layoutAttributes =[self alignTopLayoutAttributesForElements:layoutAttributes];
+    
+    return layoutAttributes;
 }
 
 - (UICollectionViewLayoutAttributes *)layoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath {
+ 
     UICollectionViewLayoutAttributes *layoutAttributes = [super layoutAttributesForItemAtIndexPath:indexPath];
+    
     
     switch (layoutAttributes.representedElementCategory) {
         case UICollectionElementCategoryCell: {
@@ -519,8 +524,54 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         } break;
     }
     
+    
     return layoutAttributes;
 }
+
+
+//使每个item的frame 上对齐
+- (NSArray *)alignTopLayoutAttributesForElements:(NSArray *)originAttributes;
+{
+   // NSArray *attrs = [[NSArray alloc] initWithArray:originAttributes copyItems:YES];
+    
+    NSArray *attrs = originAttributes;
+    CGFloat baseline = -2;
+    NSMutableArray *sameLineElements = [NSMutableArray array];
+    
+    for (UICollectionViewLayoutAttributes *element in attrs) {
+        if (element.representedElementCategory == UICollectionElementCategoryCell) {
+            CGRect frame = element.frame;
+            CGFloat centerY = CGRectGetMidY(frame);
+            if (ABS(centerY - baseline) > 1) {
+                baseline = centerY;
+                [self alignToTopForSameLineElements:sameLineElements];
+                [sameLineElements removeAllObjects];
+            }
+            [sameLineElements addObject:element];
+        }
+    }
+    [self alignToTopForSameLineElements:sameLineElements];//align one more time for the last line
+    return attrs;
+}
+
+
+- (void)alignToTopForSameLineElements:(NSArray *)sameLineElements
+{
+    if (sameLineElements.count == 0) {
+        return;
+    }
+    NSArray *sorted = [sameLineElements sortedArrayUsingComparator:^NSComparisonResult(UICollectionViewLayoutAttributes *obj1, UICollectionViewLayoutAttributes *obj2) {
+        CGFloat height1 = obj1.frame.size.height;
+        CGFloat height2 = obj2.frame.size.height;
+        CGFloat delta = height1 - height2;
+        return delta == 0. ? NSOrderedSame : ABS(delta)/delta;
+    }];
+    UICollectionViewLayoutAttributes *tallest = [sorted lastObject];
+    [sameLineElements enumerateObjectsUsingBlock:^(UICollectionViewLayoutAttributes *obj, NSUInteger idx, BOOL *stop) {
+        obj.frame = CGRectOffset(obj.frame, 0, tallest.frame.origin.y - obj.frame.origin.y);
+    }];
+}
+
 
 #pragma mark - UIGestureRecognizerDelegate methods
 

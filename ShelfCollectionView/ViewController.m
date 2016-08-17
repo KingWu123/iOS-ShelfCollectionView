@@ -12,14 +12,30 @@
 #import "BookshelfCollectionViewFlowLayout.h"
 
 
+@interface ItemData : NSObject
 
+@property (nonatomic, strong)NSString *title;
+@property (nonatomic, assign)CGSize itemSize;
+
+- (instancetype)initWithTitle:(NSString *)title itemSize:(CGSize)itemSize;
+@end
+@implementation ItemData
+- (instancetype)initWithTitle:(NSString *)title itemSize:(CGSize)itemSize{
+    self = [super init];
+    if (self){
+        self.title = title;
+        self.itemSize = itemSize;
+    }
+    return self;
+}
+@end
 
 
 @interface ViewController ()<BookShelfCollectionViewDelegateFlowLayout, BookShelfCollectionViewDataSource>
 
 
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
-@property (nonatomic, strong)NSMutableArray *modelSource;
+@property (nonatomic, strong)NSMutableArray<ItemData *> *modelSource;
 
 @end
 
@@ -41,9 +57,20 @@
     
 
     //init modelSource
+    float width = [[UIScreen mainScreen]bounds].size.width /3;
+    
     self.modelSource = [[NSMutableArray alloc]init];
     for (int i=0; i<100; i++){
-        [self.modelSource addObject:[NSString stringWithFormat:@"book %d", i]];
+        
+        float height = width + 50;
+        if (i%3 == 0){
+            height += 15;
+        }else if (i%3 == 1){
+            height += 30;
+        }
+        CGSize itemSize = CGSizeMake(width, height);
+        ItemData *itemData = [[ItemData alloc]initWithTitle:[NSString stringWithFormat:@"book %d", i] itemSize:itemSize];
+        [self.modelSource addObject:itemData];
     }
 }
 
@@ -72,7 +99,7 @@
     
     BookCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"BookCollectionViewCell" forIndexPath:indexPath];
     
-    [cell initCellWithIndex:[self.modelSource objectAtIndex:indexPath.row]];
+    [cell initCellWithIndex:[self.modelSource objectAtIndex:indexPath.row].title];
     return cell;
 }
 
@@ -95,14 +122,7 @@
 #pragma mark - UICollectionViewDelegateFlowLayout
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
     
-    float width = [[UIScreen mainScreen]bounds].size.width /3;
-    float height = width + 50;
-//    if (indexPath.row%3 == 0){
-//        height += 15;
-//    }else if (indexPath.row%3 == 1){
-//        height += 30;
-//    }
-    return CGSizeMake(width, height);
+    return [self.modelSource objectAtIndex:indexPath.row].itemSize;
 }
 
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section{
