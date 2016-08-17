@@ -96,6 +96,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 @property (assign, nonatomic, readonly) id<BookShelfCollectionViewDelegateFlowLayout> delegate;
 
 
+@property (assign, nonatomic)BOOL isGroupBeginSucceed;
 @property (strong, nonatomic) NSTimer *groupConditionStageOneTimer;//分组满足条件阶段1定时器
 @property (strong, nonatomic) NSTimer *groupConditionStageTwoTimer;//分组满足条件阶段2定时器
 
@@ -129,6 +130,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 - (void)dealloc{
     [self invalidatesScrollTimer];
+    [self removeGroupConditionTimer];
     
     [self removeGesture];
     
@@ -137,6 +139,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 - (void)initCommon{
+    self.isGroupBeginSucceed = NO;
+    
     _reorderEnabled = YES;
     _groupEnabled = NO;
     self.scrollingSpeed = 300.f;
@@ -226,22 +230,34 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         
     }else{
         
-        //如果手指的位置 在新的itemFrame的 0.3---0.7 范围内，且停留在那里的时间满足要求， 则进行分组
+        //如果手指的位置 在新的itemFrame的 0.3---0.7 范围内，且停留在那里的时间满足要求， 则进行分组流程处理
         if ([self checkPostion:currentPostion inGroupIndexItemFrame:newIndexPathItemFrame]){
             
-            //如果阶段1的分组条件判断还没有定时器，则加入一个定时器
-            if (self.groupConditionStageOneTimer == nil && self.groupConditionStageTwoTimer == nil){
-                self.groupConditionStageOneTimer =  [NSTimer timerWithTimeInterval:0.1 target:self selector:@selector(willBeginGroup:) userInfo:newIndexPath repeats:NO];
+            //如果分组开始没有成功， 且没有加入分组定时器的判断，则加入阶段一定时器
+            if (!self.isGroupBeginSucceed
+                && self.groupConditionStageOneTimer == nil
+                && self.groupConditionStageTwoTimer == nil){
+                
+                self.groupConditionStageOneTimer =  [NSTimer timerWithTimeInterval:0.5 target:self selector:@selector(willBeginGroup:) userInfo:newIndexPath repeats:NO];
                 [[NSRunLoop currentRunLoop] addTimer:self.groupConditionStageOneTimer forMode:NSRunLoopCommonModes];
             }
             
         }else if (currentPostion.x > newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.75){
             [self reorderItemFromIndexPath:previousIndexPath toIndexPath:newIndexPath];
+            
+            //分组条件只要不成立，都取消掉定时器
+            [self removeGroupConditionTimer];
+        }else{
+            
+            //分组条件只要不成立，都取消掉定时器
+            [self removeGroupConditionTimer];
         }
     }
     
 }
 
+
+#pragma mark - reorder
 //reorder操作
 - (void)reorderItemFromIndexPath:(NSIndexPath *)previousIndexPath toIndexPath:(NSIndexPath *)newIndexPath{
     
@@ -273,20 +289,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 }
 
+#pragma mark - group
 
-//判断位置是否在分组的item frame 范围内
-- (BOOL)checkPostion:(CGPoint )postion inGroupIndexItemFrame:(CGRect)itemframe{
-    if( postion.x > itemframe.origin.x + itemframe.size.width * 0.3
-       && postion.x < itemframe.origin.x + itemframe.size.width * 0.7
-       && postion.y > itemframe.origin.y + itemframe.size.height * 0.3
-       && postion.y < itemframe.origin.y + itemframe.size.height * 0.7){
-        return YES;
-    }else{
-        return NO;
-    }
-}
-
-//将要开始进行分组
+//将要进入开始分组
 - (void)willBeginGroup:(NSTimer *)timer{
     
     NSIndexPath *groupIndexPath = timer.userInfo;
@@ -295,14 +300,21 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     if ([newIndexPath isEqual:groupIndexPath]){
         
-        CGRect groupPathItemFrame = [self.collectionView cellForItemAtIndexPath:newIndexPath].frame;
+        UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:newIndexPath];
+        CGRect groupPathItemFrame = groupCell.frame;
         
         //在分组范围内停留了时间满足
         if ([self checkPostion:currentPostion inGroupIndexItemFrame:groupPathItemFrame]){
             
             //将要进入分组处理阶段2
-            self.groupConditionStageTwoTimer =  [NSTimer timerWithTimeInterval:0.3 target:self selector:@selector(didBeginGroup:) userInfo:groupIndexPath repeats:NO];
+            self.groupConditionStageTwoTimer =  [NSTimer timerWithTimeInterval:1 target:self selector:@selector(didBeginGroup:) userInfo:groupIndexPath repeats:NO];
             [[NSRunLoop currentRunLoop] addTimer:self.groupConditionStageTwoTimer forMode:NSRunLoopCommonModes];
+            
+            //此时被分组的item 要变为分组view显示
+            UIView *groupView = [self viewForGroupedItem:groupIndexPath];
+            [groupCell addSubview:groupView];
+            
+            [self beginGroupItemBlink:groupIndexPath];
             
             NSLog(@"will begin Group");
         }
@@ -313,11 +325,21 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.groupConditionStageOneTimer = nil;
 }
 
+//进入开始分组 失败
+- (void)didBeginGroupFailed:(NSIndexPath *)groupIndexPath{
+ 
+    [self endGroupItemBlink:groupIndexPath];
+}
+
+//进入开始分组处理
 - (void)didBeginGroup:(NSTimer *)timer{
+
+    
     NSIndexPath *groupIndexPath = timer.userInfo;
     CGPoint currentPostion = [self.panGestureRecognizer locationInView:self.collectionView];
     NSIndexPath *newIndexPath = [self.collectionView indexPathForItemAtPoint:currentPostion];
     
+    [self endGroupItemBlink:groupIndexPath];
     
     if ([newIndexPath isEqual:groupIndexPath]){
         
@@ -326,7 +348,10 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         //在分组范围内停留了时间满足
         if ([self checkPostion:currentPostion inGroupIndexItemFrame:groupPathItemFrame]){
             
+           
+            
             NSLog(@"did begin Group");
+            self.isGroupBeginSucceed = YES;
         }
         
     }
@@ -338,10 +363,83 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 
 
-//group操作
 - (void)groupItemAtIndexPath:(NSIndexPath *)destIndexPath{
     NSLog(@"begin group");
 }
+
+
+//判断位置是否在分组的item frame 范围内
+- (BOOL)checkPostion:(CGPoint )postion inGroupIndexItemFrame:(CGRect)itemframe{
+    if( postion.x > itemframe.origin.x + itemframe.size.width * 0.2
+       && postion.x < itemframe.origin.x + itemframe.size.width * 0.7
+       && postion.y > itemframe.origin.y + itemframe.size.height * 0.3
+       && postion.y < itemframe.origin.y + itemframe.size.height * 0.8){
+        return YES;
+    }else{
+        return NO;
+    }
+}
+
+- (UIView *)viewForGroupedItem:(NSIndexPath *)indexPath{
+    
+    
+    if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:viewForGroupItemAtIndexPath:)]){
+        return [self.dataSource collectionView:self.collectionView viewForGroupItemAtIndexPath:indexPath];
+    }
+    
+    
+    if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView :isGroupedItemAtIndexPath:)]){
+        //如果就是个groupview，则不要返回
+        if ([self.dataSource collectionView:self.collectionView isGroupedItemAtIndexPath:indexPath]){
+            return nil;
+        }
+    }
+    
+    UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:indexPath];
+    UIView * grouView = [[UIView alloc]initWithFrame:groupCell.bounds];
+    grouView.backgroundColor = [UIColor redColor];
+    UIView *snapShot = [groupCell BS_snapShotView];
+    snapShot.frame = CGRectMake(2, 2, groupCell.frame.size.width/3, groupCell.frame.size.height/3);
+    [grouView addSubview:snapShot];
+    return grouView;
+
+    
+}
+
+- (void)beginGroupItemBlink:(NSIndexPath *)groupIndex{
+    UIView *groupItem = [self.collectionView cellForItemAtIndexPath:groupIndex];
+    
+    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    [animation setFromValue:[NSNumber numberWithFloat:1.0]];
+    [animation setToValue:[NSNumber numberWithFloat:0.0]];
+    [animation setDuration:0.5f];
+    [animation setTimingFunction:[CAMediaTimingFunction
+                                  functionWithName:kCAMediaTimingFunctionLinear]];
+    [animation setAutoreverses:YES];
+    [animation setRepeatCount:20000];
+    [[groupItem layer] addAnimation:animation forKey:@"opacity"];
+}
+
+- (void)endGroupItemBlink:(NSIndexPath *)groupIndex{
+    UIView *groupItem = [self.collectionView cellForItemAtIndexPath:groupIndex];
+    [[groupItem layer] removeAnimationForKey:@"opacity"];
+}
+
+- (void)removeGroupConditionTimer{
+    if (self.groupConditionStageOneTimer != nil){
+        [self.groupConditionStageOneTimer invalidate];
+        self.groupConditionStageOneTimer = nil;
+    }
+    if(self.groupConditionStageTwoTimer != nil){
+        
+        //如果进入了阶段而定时器，但此时有取消了定时器，需要告知 开始进入分组失败
+        [self didBeginGroupFailed:self.groupConditionStageTwoTimer.userInfo];
+        
+        [self.groupConditionStageTwoTimer invalidate];
+        self.groupConditionStageTwoTimer = nil;
+    }
+}
+
 
 #pragma mark - gesture
 
@@ -729,14 +827,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 #pragma mark - kvo
 - (void)registerKVO{
     [self addObserver:self forKeyPath:kBSCollectionViewKeyPath options:NSKeyValueObservingOptionNew context:nil];
-    
-    
-   // [self addObserver:self forKeyPath:@"self.selectedSnapShotView.center" options:NSKeyValueObservingOptionNew context:nil];
 }
 
 - (void)unRegisterKVO{
     [self removeObserver:self forKeyPath:kBSCollectionViewKeyPath];
-   // [self removeObserver:self forKeyPath:@"self.selectedSnapShotView.center"];
+  
 }
 
 
@@ -748,9 +843,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             [self invalidatesScrollTimer];
             [self removeGesture];
         }
-    }else if ([keyPath isEqualToString:@"self.selectedSnapShotView.center"]){
-        
-        //NSLog(@"center: x = %f, y = %f", self.selectedSnapShotView.center.x, self.selectedSnapShotView.center.y);
     }
 }
 #pragma mark - notification

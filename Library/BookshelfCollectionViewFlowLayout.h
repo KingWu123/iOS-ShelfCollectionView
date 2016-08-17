@@ -19,6 +19,9 @@
 //item是否是分组的item
 - (BOOL)collectionView:(UICollectionView *)collectionView isGroupedItemAtIndexPath:(NSIndexPath *)indexPath;
 
+
+//进行分组的item 显示的view
+- (UIView *)collectionView:(UICollectionView *)collectionView viewForGroupItemAtIndexPath:(NSIndexPath *)indexPath;
 @end
 
 
@@ -34,12 +37,7 @@
 
 
 
-//will begin group  itemIndexPath to the groupIndexPath
-- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout willBeginGroupItemIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
 
-
-//did begin group  itemIndexPath to the groupIndexPath
-- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout didBeginGroupItemIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
 
 
 //cancel group  itemIndexPath to the groupIndexPath

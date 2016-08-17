@@ -117,6 +117,23 @@
     [self.modelSource insertObject:sourceObject atIndex:destinationIndexPath.row];
 }
 
+
+
+- (UIView *)collectionView:(UICollectionView *)collectionView viewForGroupItemAtIndexPath:(NSIndexPath *)indexPath{
+    
+    UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:indexPath];
+    
+    UIView * groupBackgroundView = [[UIView alloc]initWithFrame:groupCell.bounds];
+    groupBackgroundView.backgroundColor = [UIColor redColor];
+    UIView *snapShot = [self snapShotView:groupCell];
+    snapShot.frame = CGRectMake(2, 2, groupCell.frame.size.width/3, groupCell.frame.size.height/3);
+    [groupBackgroundView addSubview:snapShot];
+    
+  
+    return groupBackgroundView;
+}
+
+
 #pragma mark - UICollectionViewDelegate
 
 
@@ -139,9 +156,14 @@
 
 
 
+#pragma mark - UICollectionViewDelegateFlowLayout
 
 
 
+//did begin group  itemIndexPath to the groupIndexPath
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout didBeginGroupItemIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
+    
+}
 
 
 //
@@ -176,6 +198,16 @@
 //    }
 //    
 //}
+
+
+- (UIView *)snapShotView:(UIView *)aView{
+    UIGraphicsBeginImageContextWithOptions(aView.bounds.size, aView.isOpaque, 0.0f);
+    [aView drawViewHierarchyInRect:aView.bounds afterScreenUpdates:YES];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return [[UIImageView alloc] initWithImage:image];
+}
+
 
 @end
 
