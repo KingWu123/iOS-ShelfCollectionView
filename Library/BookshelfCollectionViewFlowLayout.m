@@ -74,7 +74,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 #pragma mark - BookshelfCollectionViewFlowLayout
 
 /**
- *  实现一个类似于能够对书籍进行排序， 分组功能的的书架功能，类似于iphone手机界面对应用图标进行排序，分组。
+ *  实现一个类似于能够对书籍进行排序、分组功能的的书架功能，类似于iphone手机界面对应用图标进行排序、分组。
  */
 @interface BookshelfCollectionViewFlowLayout()<UIGestureRecognizerDelegate>
 
@@ -82,7 +82,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 @property (nonatomic, strong) NSIndexPath *selectedItemCurrentIndexPath;//选中的item当前的IndexPath
 @property (nonatomic, strong) UIView* selectedSnapShotView;//选中的item的snapShotView
 @property (nonatomic, assign) CGPoint snapShotViewScrollingCenter;//标记最初的selectedSnapShotView.center + scrollview.offset的值
-@property (nonatomic, assign) CGPoint snapShotViewPanTranslation;
+@property (nonatomic, assign) CGPoint snapShotViewPanTranslation;//pan手势滑动的距离
 
 @property (nonatomic, assign) CGFloat scrollingSpeed;//拖动item时滑动的速度
 @property (nonatomic, assign) UIEdgeInsets scrollingTriggerEdgeInsets;//触发滑动的范围
@@ -153,6 +153,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }
 }
 
+
+//判断移动的item是否要换到新的位置
 - (void)invalidateLayoutIfNecessary {
     NSIndexPath *newIndexPath = [self.collectionView indexPathForItemAtPoint:self.selectedSnapShotView.center];
     NSIndexPath *previousIndexPath = self.selectedItemCurrentIndexPath;
@@ -164,7 +166,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         
     }else if (newIndexPath == nil){
         
-        //判断是否到最下边, 或最右边，如果是的，放在最后一个
+        //判断是否到最下边、或最右边，如果是，放在最后一个
         if ( (self.scrollDirection == UICollectionViewScrollDirectionVertical && (self.selectedSnapShotView.center.y > self.collectionView.contentSize.height - self.selectedSnapShotView.frame.size.height))
             
             || (self.scrollDirection == UICollectionViewScrollDirectionHorizontal && (self.selectedSnapShotView.center.x > self.collectionView.contentSize.width - self.selectedSnapShotView.frame.size.width)))
@@ -191,6 +193,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.displayLink = nil;
 }
 
+//滚动的更新
 - (void)setupScrollTimerInDirection:(BookShelfScrollingDirection)direction {
     if (!self.displayLink.paused) {
         BookShelfScrollingDirection oldDirection = [self.displayLink.BS_userInfo[kBSScrollingDirectionKey] integerValue];
@@ -206,6 +209,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.displayLink.BS_userInfo = @{ kBSScrollingDirectionKey : @(direction) };
     
     [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+   
 }
 
 
@@ -265,47 +269,84 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         
         self.selectedItemCurrentIndexPath = self.selectedItemOrignIndexPath = indexPath;
         
+        //begin movement
+        if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginMovementForItemAtIndexPath:)]){
+            [self.delegate collectionView:self.collectionView layout:self beginMovementForItemAtIndexPath:indexPath];
+        }
+        
+        //snapshot view
         UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
         self.selectedSnapShotView = [[UIView alloc] initWithFrame:cell.frame];
-        
         UIView *imageView = [cell BS_snapShotView];
         imageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [self.selectedSnapShotView addSubview:imageView];
-        
         [self.collectionView addSubview:self.selectedSnapShotView];
         
         self.snapShotViewScrollingCenter = self.selectedSnapShotView.center;
+        
+        __weak typeof(self) weakSelf = self;
+        [UIView animateWithDuration:0.2 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+            __strong typeof(self) strongSelf = weakSelf;
+            if (strongSelf){
+                strongSelf.selectedSnapShotView.transform = CGAffineTransformMakeScale(1.1f, 1.1f);
+            }
+        } completion:^(BOOL finished) {
+            __strong typeof(self) strongSelf = weakSelf;
+            if (strongSelf) {
+            }
+        }];
         
         [self invalidateLayout];
         
     }else if (recognizer.state == UIGestureRecognizerStateCancelled
               || recognizer.state == UIGestureRecognizerStateEnded){
         
-         NSIndexPath *currentIndexPath = self.selectedItemCurrentIndexPath;
-        
-        //indexPath changed, exchange data
-        if (![self.selectedItemOrignIndexPath isEqual:self.selectedItemCurrentIndexPath]){
-           //--todo--
+        if (self.selectedItemCurrentIndexPath == nil){
+            return;
         }
         
+        //just need post change data delegate at the end of move
+        if (![self.selectedItemOrignIndexPath isEqual:self.selectedItemCurrentIndexPath]){
+           
+            if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
+                [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:self.selectedItemOrignIndexPath toIndexPath:self.selectedItemCurrentIndexPath];
+            }
+        }
+        
+        
+        NSIndexPath *currentIndexPath = self.selectedItemCurrentIndexPath;
         self.selectedItemCurrentIndexPath = self.selectedItemOrignIndexPath = nil;
         self.snapShotViewScrollingCenter = CGPointZero;
         
         UICollectionViewLayoutAttributes *layoutAttributes = [self layoutAttributesForItemAtIndexPath:currentIndexPath];
         
         self.longPressGestureRecognizer.enabled = NO;
+        
+        __weak typeof(self) weakSelf = self;
         [UIView animateWithDuration:0.3 delay:0.0 options:UIViewAnimationOptionCurveEaseOut animations:^{
-            self.selectedSnapShotView.center = layoutAttributes.center;
+            __strong typeof(self) strongSelf = weakSelf;
+            if (strongSelf){
+                
+                strongSelf.selectedSnapShotView.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
+                strongSelf.selectedSnapShotView.center = layoutAttributes.center;
+            }
             
         } completion:^(BOOL finished) {
             self.longPressGestureRecognizer.enabled = YES;
             
-            [self.selectedSnapShotView removeFromSuperview];
-            self.selectedSnapShotView = nil;
-            [self invalidateLayout];
+            __strong typeof(self) strongSelf = weakSelf;
+            if (strongSelf){
+                [strongSelf.selectedSnapShotView removeFromSuperview];
+                strongSelf.selectedSnapShotView = nil;
+                [strongSelf invalidateLayout];
+                
+                //end movement
+                if (strongSelf.delegate != nil && [strongSelf.delegate respondsToSelector:@selector(collectionView:layout:endMovementForItemAtIndexPath:)]){
+                    [strongSelf.delegate collectionView:strongSelf.collectionView layout:strongSelf beginMovementForItemAtIndexPath:currentIndexPath];
+                }
+            }
             
         }];
-        
     }
 }
 
@@ -315,8 +356,10 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         case UIGestureRecognizerStateBegan:
         case UIGestureRecognizerStateChanged: {
             
+            //pan translation
             self.snapShotViewPanTranslation = [gestureRecognizer translationInView:self.collectionView];
            
+            //update snapshotView center
             CGPoint viewCenter = self.selectedSnapShotView.center = BS_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
             
             [self invalidateLayoutIfNecessary];
@@ -326,35 +369,38 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             switch (self.scrollDirection) {
                 case UICollectionViewScrollDirectionVertical: {
                     
-                    CGFloat topOffsetY = (viewCenter.y - hegiht/2) - (CGRectGetMinY(self.collectionView.bounds) - self.scrollingTriggerEdgeInsets.top);
-                    if (topOffsetY < 0) {
-                        [self caculateScrollSpeed:topOffsetY];
+                    CGFloat topExceedY = (viewCenter.y - hegiht/2) - (CGRectGetMinY(self.collectionView.bounds) - self.scrollingTriggerEdgeInsets.top);
+                    CGFloat bottomExceedtY = (viewCenter.y + hegiht/2) - (CGRectGetMaxY(self.collectionView.bounds) + self.scrollingTriggerEdgeInsets.bottom);
+                    
+                    if (topExceedY < 0) {
+                        [self caculateScrollSpeed:topExceedY];
                         [self setupScrollTimerInDirection:BookShelfScrollingDirectionUp];
-                    } else {
                         
-                        CGFloat bottomOffsetY = (viewCenter.y + hegiht/2) - (CGRectGetMaxY(self.collectionView.bounds) + self.scrollingTriggerEdgeInsets.bottom);
-                        if (bottomOffsetY > 0) {
-                            [self caculateScrollSpeed:bottomOffsetY];
-                            [self setupScrollTimerInDirection:BookShelfScrollingDirectionDown];
-                        } else {
+                    } else if (bottomExceedtY > 0) {
+                        [self caculateScrollSpeed:bottomExceedtY];
+                        [self setupScrollTimerInDirection:BookShelfScrollingDirectionDown];
+                        
+                    }else {
                             [self invalidatesScrollTimer];
-                        }
                     }
                 } break;
                 case UICollectionViewScrollDirectionHorizontal: {
                     
-                    CGFloat leftOffsetX = (viewCenter.x - width/2) - (CGRectGetMinX(self.collectionView.bounds) - self.scrollingTriggerEdgeInsets.left);
-                    if (leftOffsetX < 0) {
+                    CGFloat leftExceedX = (viewCenter.x - width/2) - (CGRectGetMinX(self.collectionView.bounds) - self.scrollingTriggerEdgeInsets.left);
+                    CGFloat rightExceedX = viewCenter.x + width/2 -  (CGRectGetMaxX(self.collectionView.bounds) + self.scrollingTriggerEdgeInsets.right);
+                    
+                    if (leftExceedX < 0) {
+                        [self caculateScrollSpeed:leftExceedX];
                         [self setupScrollTimerInDirection:BookShelfScrollingDirectionLeft];
-                    } else {
                         
-                        CGFloat rightOffsetX = viewCenter.x + width/2 -  (CGRectGetMaxX(self.collectionView.bounds) + self.scrollingTriggerEdgeInsets.right);
-                        if (rightOffsetX > 0) {
-                            [self setupScrollTimerInDirection:BookShelfScrollingDirectionRight];
-                        } else {
-                            [self invalidatesScrollTimer];
-                        }
+                    } else if (rightExceedX > 0) {
+                        [self caculateScrollSpeed:rightExceedX];
+                        [self setupScrollTimerInDirection:BookShelfScrollingDirectionRight];
+                        
+                    } else {
+                        [self invalidatesScrollTimer];
                     }
+                    
                 } break;
             }
         } break;
@@ -368,6 +414,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 - (void)handleScroll:(CADisplayLink *)displayLink{
+     NSLog(@"frame = %ld, timeStap = %f, duration = %f", self.displayLink.frameInterval, self.displayLink.timestamp, self.displayLink.duration);
+    
     BookShelfScrollingDirection direction = (BookShelfScrollingDirection)[displayLink.BS_userInfo[kBSScrollingDirectionKey] integerValue];
     if (direction == BookShelfScrollingDirectionUnknown) {
         return;
@@ -433,10 +481,12 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     [self invalidateLayoutIfNecessary];
 }
 
-- (void)caculateScrollSpeed:(CGFloat)offset{
+//根据超出的距离，滚动的速度有个变化
+- (void)caculateScrollSpeed:(CGFloat)exceedDistance{
     
-    self.scrollingSpeed = ABS(offset) * 5 + 200;
+    self.scrollingSpeed = ABS(exceedDistance) * 5 + 200;
 }
+
 
 #pragma mark - UICollectionViewLayout overridden methods
 
