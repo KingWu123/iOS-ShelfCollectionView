@@ -63,11 +63,11 @@
     for (int i=0; i<100; i++){
         
         float height = width + 50;
-        if (i%3 == 0){
-            height += 15;
-        }else if (i%3 == 1){
-            height += 30;
-        }
+//        if (i%3 == 0){
+//            height += 15;
+//        }else if (i%3 == 1){
+//            height += 30;
+//        }
         CGSize itemSize = CGSizeMake(width, height);
         ItemData *itemData = [[ItemData alloc]initWithTitle:[NSString stringWithFormat:@"book %d", i] itemSize:itemSize];
         [self.modelSource addObject:itemData];
@@ -84,6 +84,7 @@
 - (UICollectionViewLayout *)createLayout{
     BookshelfCollectionViewFlowLayout *layout = [[BookshelfCollectionViewFlowLayout alloc]init];
     [layout setScrollDirection:UICollectionViewScrollDirectionVertical];
+    layout.groupEnabled = YES;
     return layout;
 }
 
