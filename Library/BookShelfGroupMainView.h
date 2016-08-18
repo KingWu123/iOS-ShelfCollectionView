@@ -8,11 +8,12 @@
 
 #import <UIKit/UIKit.h>
 #import "itemData.h"
+#import "BookshelfCollectionViewFlowLayout.h"
 
-@interface BookShelfGroupMainView : UIView
+@interface BookShelfGroupMainView : UIView<BookShelfCollectionViewGestureDelegate>
 
 + (instancetype)loadFromNib;
 
-- (void)initWithItemData:(ItemData *)itemData groupedItemData:(NSArray<ItemData *> *)groupedItemData;
+- (void)initWithItemData:(ItemData *)itemData groupedItemData:(NSArray<ItemData *> *)groupedItemData snapView:(UIView *)snapView;
 
 @end

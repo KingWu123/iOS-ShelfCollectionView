@@ -11,6 +11,7 @@
 		756B9F9F1D658D4500279AD8 /* BookShelfGroupMainView.m in Sources */ = {isa = PBXBuildFile; fileRef = 756B9F9E1D658D4500279AD8 /* BookShelfGroupMainView.m */; };
 		756B9FA31D658DA200279AD8 /* BookShelfGroupMainView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 756B9FA21D658DA200279AD8 /* BookShelfGroupMainView.xib */; };
 		756B9FA61D658FA100279AD8 /* ItemData.m in Sources */ = {isa = PBXBuildFile; fileRef = 756B9FA51D658FA100279AD8 /* ItemData.m */; };
+		756B9FA91D65B8F600279AD8 /* BookShelfGroupViewFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 756B9FA81D65B8F600279AD8 /* BookShelfGroupViewFlowLayout.m */; };
 		75B3E8F81D5D6209008280B8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B3E8F71D5D6209008280B8 /* main.m */; };
 		75B3E8FB1D5D6209008280B8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B3E8FA1D5D6209008280B8 /* AppDelegate.m */; };
 		75B3E8FE1D5D6209008280B8 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B3E8FD1D5D6209008280B8 /* ViewController.m */; };
@@ -49,6 +50,8 @@
 		756B9FA21D658DA200279AD8 /* BookShelfGroupMainView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BookShelfGroupMainView.xib; sourceTree = "<group>"; };
 		756B9FA41D658FA100279AD8 /* ItemData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ItemData.h; sourceTree = "<group>"; };
 		756B9FA51D658FA100279AD8 /* ItemData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ItemData.m; sourceTree = "<group>"; };
+		756B9FA71D65B8F600279AD8 /* BookShelfGroupViewFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookShelfGroupViewFlowLayout.h; sourceTree = "<group>"; };
+		756B9FA81D65B8F600279AD8 /* BookShelfGroupViewFlowLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookShelfGroupViewFlowLayout.m; sourceTree = "<group>"; };
 		75B3E8F31D5D6209008280B8 /* ShelfCollectionView.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShelfCollectionView.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75B3E8F71D5D6209008280B8 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		75B3E8F91D5D6209008280B8 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -104,6 +107,8 @@
 				756B9F9D1D658D4500279AD8 /* BookShelfGroupMainView.h */,
 				756B9F9E1D658D4500279AD8 /* BookShelfGroupMainView.m */,
 				756B9FA21D658DA200279AD8 /* BookShelfGroupMainView.xib */,
+				756B9FA71D65B8F600279AD8 /* BookShelfGroupViewFlowLayout.h */,
+				756B9FA81D65B8F600279AD8 /* BookShelfGroupViewFlowLayout.m */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -315,6 +320,7 @@
 				75B3E8FE1D5D6209008280B8 /* ViewController.m in Sources */,
 				756B9F9F1D658D4500279AD8 /* BookShelfGroupMainView.m in Sources */,
 				75B3E9381D5D6F7D008280B8 /* BookCollectionViewCell.m in Sources */,
+				756B9FA91D65B8F600279AD8 /* BookShelfGroupViewFlowLayout.m in Sources */,
 				75B3E8FB1D5D6209008280B8 /* AppDelegate.m in Sources */,
 				7550AA0E1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m in Sources */,
 				75B3E8F81D5D6209008280B8 /* main.m in Sources */,

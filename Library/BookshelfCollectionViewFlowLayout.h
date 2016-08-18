@@ -45,11 +45,26 @@
 
 
 
+//进行分组时，分组界面需要利用书架界面传过来的手势进行处理。
+@protocol BookShelfCollectionViewGestureDelegate <NSObject>
+
+@required
+
+- (void)handleLongPressGesture:(UILongPressGestureRecognizer *)gestureRecognizer inGestureView:(UIView*)view;
+
+- (void)handlePanGesture:(UIPanGestureRecognizer *)gestureRecognizer inGestureView:(UIView*)view;
+
+@end
+
 
 /**
  *  实现一个类似于能够对书籍进行排序、分组功能的的书架功能，类似于iphone手机界面对应用图标进行排序、分组。
  */
 @interface BookshelfCollectionViewFlowLayout : UICollectionViewFlowLayout
+
+
+@property (nonatomic, assign)id<BookShelfCollectionViewGestureDelegate> gestureDelegate;
+
 
 //是否打开重排功能， default is YES
 @property (nonatomic, assign)BOOL reorderEnabled;

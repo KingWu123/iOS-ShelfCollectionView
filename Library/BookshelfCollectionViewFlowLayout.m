@@ -606,6 +606,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 
 - (void)handleLongPressGesture:(UILongPressGestureRecognizer *)recognizer{
+    
+    if (self.gestureDelegate != nil && [self.gestureDelegate respondsToSelector:@selector(handleLongPressGesture:inGestureView:)]){
+        [self.gestureDelegate handleLongPressGesture:recognizer inGestureView:self.collectionView];
+    }
+    
     if (recognizer.state == UIGestureRecognizerStateBegan){
         
         CGPoint location = [recognizer locationInView:self.collectionView];
@@ -687,6 +692,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gestureRecognizer{
+    
+    //分组界面也会需要书架界面的pan手势，进行拖动、排序等操作。
+    if (self.gestureDelegate != nil && [self.gestureDelegate respondsToSelector:@selector(handlePanGesture:inGestureView:)]){
+        [self.gestureDelegate handlePanGesture:gestureRecognizer inGestureView:self.collectionView];
+    }
     
     switch (gestureRecognizer.state) {
         case UIGestureRecognizerStateBegan:

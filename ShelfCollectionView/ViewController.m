@@ -129,9 +129,16 @@
 //did begin group  itemIndexPath to the groupIndexPath
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
     
-    BookShelfGroupMainView *groupMainView = [BookShelfGroupMainView loadFromNib];
-    [groupMainView initWithItemData:[self.modelSource objectAtIndex:itemIndexPath.row] groupedItemData:@[[self.modelSource objectAtIndex:groupIndexPath.row]]];
+    UICollectionViewCell *itemCell = [self.collectionView cellForItemAtIndexPath:itemIndexPath];
+    UIView *snapView = [self snapShotView:itemCell];
+
     
+    
+    BookShelfGroupMainView *groupMainView = [BookShelfGroupMainView loadFromNib];
+    [groupMainView initWithItemData:[self.modelSource objectAtIndex:itemIndexPath.row] groupedItemData:@[[self.modelSource objectAtIndex:groupIndexPath.row]] snapView:snapView];
+    
+
+    ((BookshelfCollectionViewFlowLayout *)collectionViewLayout).gestureDelegate = groupMainView;
     
     [self.view addSubview:groupMainView];
     

@@ -7,19 +7,23 @@
 //
 
 #import "BookShelfGroupMainView.h"
-#import "BookshelfCollectionViewFlowLayout.h"
 #import "BookCollectionViewCell.h"
+#import "BookShelfGroupViewFlowLayout.h"
 
-@interface BookShelfGroupMainView ()<BookShelfCollectionViewDelegateFlowLayout, BookShelfCollectionViewDataSource>
+@interface BookShelfGroupMainView ()<BookShelfGroupViewDataSource, BookShelfGroupViewDelegateFlowLayout>
 
 
 @property (weak, nonatomic) IBOutlet UIView *backgroundView;
-
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UITextField *groupTitleTextFiled;
 
+@property (strong, nonatomic)BookShelfGroupViewFlowLayout *groupFlowLayout;
 
 @property (strong, nonatomic)NSMutableArray<ItemData *> * allGroupItems;
+
+
+@property (nonatomic, strong) UIView* selectedSnapShotView;//选中的item的snapShotView
+
 @end
 
 
@@ -34,20 +38,26 @@
 - (void)awakeFromNib{
     [self.collectionView registerNib:[UINib nibWithNibName:@"BookCollectionViewCell" bundle:nil] forCellWithReuseIdentifier:@"BookCollectionViewCell"];
 
-    
-    BookshelfCollectionViewFlowLayout *layout = [[BookshelfCollectionViewFlowLayout alloc]init];
-    [self.collectionView setCollectionViewLayout:layout];
+
+    self.groupFlowLayout = [[BookShelfGroupViewFlowLayout alloc]init];
+    [self.collectionView setCollectionViewLayout:self.groupFlowLayout];
     self.collectionView.delegate = self;
     self.collectionView.dataSource = self;
-    
+
     self.allGroupItems = [[NSMutableArray alloc]init];
 }
 
 
-- (void)initWithItemData:(ItemData *)itemData groupedItemData:(NSArray<ItemData *> *)groupedItemData{
+- (void)initWithItemData:(ItemData *)itemData groupedItemData:(NSArray<ItemData *> *)groupedItemData snapView:(UIView *)snapView{
+
     [self.allGroupItems removeAllObjects];
     [self.allGroupItems addObjectsFromArray:groupedItemData];
     [self.allGroupItems addObject:itemData];
+    
+    
+    self.selectedSnapShotView =  snapView;
+    
+    [self addSubview:self.selectedSnapShotView];
     
     [self.collectionView reloadData];
 }
@@ -94,6 +104,27 @@
     return 0;
 }
 
+
+
+//进行分组时，分组界面需要利用书架界面传过来的手势进行处理。
+#pragma mark - BookShelfCollectionViewGestureDelegate
+
+- (void)handleLongPressGesture:(UILongPressGestureRecognizer *)gestureRecognizer inGestureView:(UIView*)view{
+   
+    [self.groupFlowLayout handleLongPressGesture:gestureRecognizer];
+    
+     CGPoint location = [gestureRecognizer locationInView:view];
+    NSLog(@"groupView gesture x = %f, y = %f", location.x, location.y);
+}
+
+
+- (void)handlePanGesture:(UIPanGestureRecognizer *)gestureRecognizer inGestureView:(UIView *)view{
+    
+    [self.groupFlowLayout handlePanGesture:gestureRecognizer];
+    
+    CGPoint location = [gestureRecognizer locationInView:view];
+    NSLog(@"groupView gesture x = %f, y = %f", location.x, location.y);
+}
 
 
 @end
