@@ -16,12 +16,14 @@
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath *)destinationIndexPath;
 
 
-//item是否是分组的item
+//item是否是 分过组的item
 - (BOOL)collectionView:(UICollectionView *)collectionView isGroupedItemAtIndexPath:(NSIndexPath *)indexPath;
 
 
-//进行分组的item 显示的view
-- (UIView *)collectionView:(UICollectionView *)collectionView viewForGroupItemAtIndexPath:(NSIndexPath *)indexPath;
+
+//itemIndexPath to the groupIndexPath, 用于变跟分组数据
+- (void)collectionView:(UICollectionView *)collectionView itemIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
+
 @end
 
 
@@ -37,18 +39,10 @@
 
 
 
-
-
-
-//cancel group  itemIndexPath to the groupIndexPath
-- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout cancelGroupItemIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
-
-
-//succeed group  itemIndexPath to the groupIndexPath
-- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout succeedGroupItemIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
-
-
 @end
+
+
+
 
 /**
  *  实现一个类似于能够对书籍进行排序、分组功能的的书架功能，类似于iphone手机界面对应用图标进行排序、分组。
