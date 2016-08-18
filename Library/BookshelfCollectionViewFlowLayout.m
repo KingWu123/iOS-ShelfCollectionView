@@ -79,7 +79,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
  */
 @interface BookshelfCollectionViewFlowLayout()<UIGestureRecognizerDelegate>
 
-@property (nonatomic, strong) NSIndexPath *selectedItemOrignIndexPath;//选中的item最初的indexPath
+//@property (nonatomic, strong) NSIndexPath *selectedItemOrignIndexPath;//选中的item最初的indexPath
 @property (nonatomic, strong) NSIndexPath *selectedItemCurrentIndexPath;//选中的item当前的IndexPath
 @property (nonatomic, strong) UIView* selectedSnapShotView;//选中的item的snapShotView
 @property (nonatomic, assign) CGPoint snapShotViewScrollingCenter;//标记最初的selectedSnapShotView.center + scrollview.offset的值
@@ -99,6 +99,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 @property (assign, nonatomic)BOOL isGroupWillBeginSucceed;
 @property (strong, nonatomic) NSTimer *groupConditionWillBeginTimer;
+@property (assign, nonatomic)BOOL isGrouping;
 
 @end
 
@@ -140,7 +141,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 - (void)initCommon{
     self.isGroupWillBeginSucceed = NO;
-    
+    self.isGrouping = NO;
+
     _reorderEnabled = YES;
     _groupEnabled = NO;
     self.scrollingSpeed = 300.f;
@@ -203,7 +205,12 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 //判断选中的item是否要换到新的位置或进行分组
 - (void)ajustItemIndexpathIfNecessary {
 
-    BOOL selectedItemIsGrouped = [self.dataSource respondsToSelector:@selector(collectionView:isGroupedItemAtIndexPath:)] ?  [self.dataSource collectionView:self.collectionView isGroupedItemAtIndexPath:self.selectedItemOrignIndexPath] : NO;
+    //如果正在进行分组，则不再进行其他处理
+    if (self.isGrouping){
+        return;
+    }
+    
+    BOOL selectedItemIsGrouped = [self.dataSource respondsToSelector:@selector(collectionView:isGroupedItemAtIndexPath:)] ?  [self.dataSource collectionView:self.collectionView isGroupedItemAtIndexPath:self.selectedItemCurrentIndexPath] : NO;
     
     CGPoint currentPostion = [self.panGestureRecognizer locationInView:self.collectionView];
     NSIndexPath *newIndexPath = [self.collectionView indexPathForItemAtPoint:currentPostion];
@@ -272,6 +279,14 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         self.selectedItemCurrentIndexPath = newIndexPath;
         [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
         
+       
+        //交换数据
+        if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
+            [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
+            
+        }
+
+        
     }else if (newIndexPath == nil){
         
         //判断是否到最下边、或最右边，如果是，放在最后一个
@@ -288,8 +303,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             if (![self.selectedItemCurrentIndexPath isEqual:lastIndexPath]){
                 self.selectedItemCurrentIndexPath = lastIndexPath;
                 [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
+                
+                //交换数据
+                if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
+                    [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
+                    
+                }
             }
-            
         }
     }
 
@@ -338,9 +358,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 //分组阶段1被取消了， 如果被取消，分组进不了阶段2
 - (void)cancelBeginGroupStageOne:(NSIndexPath *)groupIndexPath{
-    [self viewTurnToGroupedItemView:groupIndexPath];
+    [self viewOfGroupedItemBackToOriginView:groupIndexPath];
     
     [self selectedItemDeattachToGroupItem:groupIndexPath];
+    
+    self.isGroupWillBeginSucceed = NO;
 }
 
 
@@ -373,16 +395,39 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         //还在分组的范围内， 分组成功
         if ([self checkPostion:currentPostion inGroupIndexItemFrame:groupPathItemFrame]){
           
+            if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginGroupForItemAtIndexPath:toGroupIndexPath:)]){
+                [self.delegate collectionView:self.collectionView layout:self beginGroupForItemAtIndexPath:self.selectedItemCurrentIndexPath toGroupIndexPath:groupIndexPath];
+            }
+            
+            
+            self.isGrouping = YES;
+            
+            
         }else{
-           
+            [self cancelGroupStageTwo:groupIndexPath];
         }
         
     }else{
-      
+        [self cancelGroupStageTwo:groupIndexPath];
     }
     
     self.isGroupWillBeginSucceed = NO;
 }
+
+
+//分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
+- (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
+    //[self cancelGroupStageTwo:groupIndexPath];
+    
+    self.isGrouping = NO;
+}
+
+//分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
+- (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
+    
+   self.isGrouping = NO;
+}
+
 
 
 //选中的item 黏附到 分组的item位置处
@@ -454,6 +499,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 - (void)groupItemCancelBlinkAnimation:(NSIndexPath *)groupIndexPath{
     UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:groupIndexPath];
     [groupCell.layer removeAllAnimations];
+    
+     groupCell.alpha = 0.0;
 }
 
 
@@ -564,7 +611,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         CGPoint location = [recognizer locationInView:self.collectionView];
         NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:location];
         
-        self.selectedItemCurrentIndexPath = self.selectedItemOrignIndexPath = indexPath;
+        self.selectedItemCurrentIndexPath = indexPath;
         
         //begin movement
         if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginMovementForItemAtIndexPath:)]){
@@ -601,18 +648,10 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         if (self.selectedItemCurrentIndexPath == nil){
             return;
         }
-        
-        //just need post change data delegate at the end of move
-        if (![self.selectedItemOrignIndexPath isEqual:self.selectedItemCurrentIndexPath]){
-           
-            if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
-                [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:self.selectedItemOrignIndexPath toIndexPath:self.selectedItemCurrentIndexPath];
-            }
-        }
-        
+    
         
         NSIndexPath *currentIndexPath = self.selectedItemCurrentIndexPath;
-        self.selectedItemCurrentIndexPath = self.selectedItemOrignIndexPath = nil;
+        self.selectedItemCurrentIndexPath  = nil;
         self.snapShotViewScrollingCenter = CGPointZero;
         
         UICollectionViewLayoutAttributes *layoutAttributes = [self layoutAttributesForItemAtIndexPath:currentIndexPath];
@@ -876,7 +915,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
     if ([self.panGestureRecognizer isEqual:gestureRecognizer]) {
-        return (self.selectedItemOrignIndexPath != nil);
+        return (self.selectedItemCurrentIndexPath != nil);
     }
     return YES;
 }

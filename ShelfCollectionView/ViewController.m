@@ -10,25 +10,10 @@
 #import "BookCollectionViewCell.h"
 
 #import "BookshelfCollectionViewFlowLayout.h"
+#import "ItemData.h"
+#import "BookShelfGroupMainView.h"
 
 
-@interface ItemData : NSObject
-
-@property (nonatomic, strong)NSString *title;
-@property (nonatomic, assign)CGSize itemSize;
-
-- (instancetype)initWithTitle:(NSString *)title itemSize:(CGSize)itemSize;
-@end
-@implementation ItemData
-- (instancetype)initWithTitle:(NSString *)title itemSize:(CGSize)itemSize{
-    self = [super init];
-    if (self){
-        self.title = title;
-        self.itemSize = itemSize;
-    }
-    return self;
-}
-@end
 
 
 @interface ViewController ()<BookShelfCollectionViewDelegateFlowLayout, BookShelfCollectionViewDataSource>
@@ -119,21 +104,6 @@
 
 
 
-- (UIView *)collectionView:(UICollectionView *)collectionView viewForGroupItemAtIndexPath:(NSIndexPath *)indexPath{
-    
-    UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:indexPath];
-    
-    UIView * groupBackgroundView = [[UIView alloc]initWithFrame:groupCell.bounds];
-    groupBackgroundView.backgroundColor = [UIColor redColor];
-    UIView *snapShot = [self snapShotView:groupCell];
-    snapShot.frame = CGRectMake(2, 2, groupCell.frame.size.width/3, groupCell.frame.size.height/3);
-    [groupBackgroundView addSubview:snapShot];
-    
-  
-    return groupBackgroundView;
-}
-
-
 #pragma mark - UICollectionViewDelegate
 
 
@@ -156,14 +126,18 @@
 
 
 
-#pragma mark - UICollectionViewDelegateFlowLayout
-
-
-
 //did begin group  itemIndexPath to the groupIndexPath
-- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout didBeginGroupItemIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
+    
+    BookShelfGroupMainView *groupMainView = [BookShelfGroupMainView loadFromNib];
+    [groupMainView initWithItemData:[self.modelSource objectAtIndex:itemIndexPath.row] groupedItemData:@[[self.modelSource objectAtIndex:groupIndexPath.row]]];
+    
+    
+    [self.view addSubview:groupMainView];
     
 }
+
+
 
 
 //

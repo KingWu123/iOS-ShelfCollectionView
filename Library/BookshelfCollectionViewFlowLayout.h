@@ -21,7 +21,7 @@
 
 
 
-//itemIndexPath to the groupIndexPath, 用于变跟分组数据
+//itemIndexPath to the groupIndexPath
 - (void)collectionView:(UICollectionView *)collectionView itemIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
 
 @end
@@ -38,6 +38,8 @@
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout endMovementForItemAtIndexPath:(NSIndexPath *)indexPath;
 
 
+//begin group, itemIndexPath to groupIndexPath
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
 
 @end
 
@@ -54,5 +56,12 @@
 
 //是否打开分组功能， default is NO,
 @property (nonatomic, assign)BOOL groupEnabled;
+
+
+//分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
+- (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
+
+//分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
+- (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
 
 @end
