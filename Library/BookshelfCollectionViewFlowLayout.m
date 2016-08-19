@@ -567,6 +567,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 //分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
 - (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
+    [self cancelGroupStageTwo:groupIndexPath];
     
     self.isGrouping = NO;
     
@@ -582,6 +583,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 #pragma mark - gesture
 
+/**
+ *  手势都加载collectionView的superView上，groupMainView也是加载collectionView的superView上的
+ *  这样 collectionView 和 groupMainView就能共用一套手势
+ */
+
 - (void)addGesture{
     
     if (self.longPressGestureRecognizer == nil){
@@ -595,13 +601,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             }
         }
         
-        [self.collectionView addGestureRecognizer:self.longPressGestureRecognizer];
+        [self.collectionView.superview addGestureRecognizer:self.longPressGestureRecognizer];
     }
     
     if (self.panGestureRecognizer == nil){
         self.panGestureRecognizer = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(handlePanGesture:)];
         self.panGestureRecognizer.delegate = self;
-        [self.collectionView addGestureRecognizer:self.panGestureRecognizer];
+        [self.collectionView.superview addGestureRecognizer:self.panGestureRecognizer];
     
     }
     

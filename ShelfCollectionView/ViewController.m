@@ -149,8 +149,9 @@
     self.bookShelfFlowLayout.gestureDelegate = groupMainView;
     
     
-    [self.collectionView addSubview:groupMainView];
-   // [self.view insertSubview:groupMainView belowSubview:snaptShotView];
+    // 必须这么写， 因为手势都加载collectionView的superView上，collectionView 和 groupMainView需要共用一套手势
+    // 因此 groupMainView需要加在collectionView的superView上
+    [self.collectionView.superview insertSubview:groupMainView belowSubview:snaptShotView];
     
 }
 
