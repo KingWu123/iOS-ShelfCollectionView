@@ -16,12 +16,17 @@
 
 
 
-@interface ViewController ()<BookShelfCollectionViewDelegateFlowLayout, BookShelfCollectionViewDataSource>
+@interface ViewController ()<BookShelfCollectionViewDelegateFlowLayout, BookShelfCollectionViewDataSource,BookShelfGroupMainViewDelegate>
 
 
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (nonatomic, strong)NSMutableArray<ItemData *> *modelSource;
 
+@property (weak, nonatomic)BookshelfCollectionViewFlowLayout *bookShelfFlowLayout;
+
+@property (weak, nonatomic)NSIndexPath *selectedIndexPath;
+@property (weak, nonatomic)NSIndexPath *groupIndexPath;
+@property (weak, nonatomic)UIView *groupMainView;
 @end
 
 
@@ -68,6 +73,7 @@
 
 - (UICollectionViewLayout *)createLayout{
     BookshelfCollectionViewFlowLayout *layout = [[BookshelfCollectionViewFlowLayout alloc]init];
+    self.bookShelfFlowLayout = layout;
     [layout setScrollDirection:UICollectionViewScrollDirectionVertical];
     layout.groupEnabled = YES;
     return layout;
@@ -127,22 +133,66 @@
 
 
 //did begin group  itemIndexPath to the groupIndexPath
-- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
-    
-    UICollectionViewCell *itemCell = [self.collectionView cellForItemAtIndexPath:itemIndexPath];
-    UIView *snapView = [self snapShotView:itemCell];
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath selectedSnapShotView:(UIView *)snaptShotView{
 
+    self.selectedIndexPath = itemIndexPath;
+    self.groupIndexPath = groupIndexPath;
     
     
     BookShelfGroupMainView *groupMainView = [BookShelfGroupMainView loadFromNib];
-    [groupMainView initWithItemData:[self.modelSource objectAtIndex:itemIndexPath.row] groupedItemData:@[[self.modelSource objectAtIndex:groupIndexPath.row]] snapView:snapView];
-    
+    [groupMainView initWithItemData:[self.modelSource objectAtIndex:itemIndexPath.row] groupedItemData:@[[self.modelSource objectAtIndex:groupIndexPath.row]] snapView:snaptShotView];
 
-    ((BookshelfCollectionViewFlowLayout *)collectionViewLayout).gestureDelegate = groupMainView;
+    groupMainView.delegate = self;
+    self.groupMainView  = groupMainView;
     
-    [self.view addSubview:groupMainView];
+    //书架的手势传给分组界面
+    self.bookShelfFlowLayout.gestureDelegate = groupMainView;
+    
+    
+    [self.collectionView addSubview:groupMainView];
+   // [self.view insertSubview:groupMainView belowSubview:snaptShotView];
     
 }
+
+#pragma mark - BookShelfGroupMainViewDelegate
+//用户取消了分组操作
+- (void)cancelGroupInGroupViewWithItemData:(ItemData *)itemData withGroupData:(NSArray<ItemData *> *)groupItemData withSnapShotView:(UIView *)snapShotView{
+    
+    //分组界面接收书架界面手势的 回调 注销
+    self.bookShelfFlowLayout.gestureDelegate = nil;
+    
+    //取消分组，用户可能换了一个选中的item，退出来了，这里要处理一下 --todo--
+    
+    
+    //移除分组界面
+    [self.groupMainView removeFromSuperview];
+    self.groupMainView = nil;
+    
+    //告知书籍layout,进入分组界面，没有分组，就又退出来了
+    [self.bookShelfFlowLayout cancelGroupForItemAtIndexPath:self.selectedIndexPath toGroupIndexPath:self.groupIndexPath withSnapShotView:snapShotView];
+}
+
+//用户完成了分组操作
+- (void)finishGroupInGroupViewWithGroupData:(NSArray<ItemData *> *)groupItemData{
+    //分组界面接收书架界面手势的 回调 注销
+      self.bookShelfFlowLayout.gestureDelegate = nil;
+    
+    
+    //合并分组的数据--todo--
+    
+    
+    //删除之前被分组的数据
+    [self.modelSource removeObjectAtIndex:self.selectedIndexPath.row];
+    //同时删除这个cell
+    [self.collectionView deleteItemsAtIndexPaths:@[self.selectedIndexPath]];
+    
+    //移除分组界面
+    [self.groupMainView removeFromSuperview];
+    self.groupMainView = nil;
+    
+    [self.bookShelfFlowLayout finishedGroupForItemAtIndexPath:self.selectedIndexPath toGroupIndexPath:self.groupIndexPath];
+}
+
 
 
 

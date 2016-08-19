@@ -79,10 +79,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
  */
 @interface BookshelfCollectionViewFlowLayout()<UIGestureRecognizerDelegate>
 
-//@property (nonatomic, strong) NSIndexPath *selectedItemOrignIndexPath;//选中的item最初的indexPath
+
+@property (nonatomic, weak) UIView *selectedSnapShotViewParentView; //选中的item的父view
 @property (nonatomic, strong) NSIndexPath *selectedItemCurrentIndexPath;//选中的item当前的IndexPath
 @property (nonatomic, strong) UIView* selectedSnapShotView;//选中的item的snapShotView
-@property (nonatomic, assign) CGPoint snapShotViewScrollingCenter;//标记最初的selectedSnapShotView.center + scrollview.offset的值
+@property (nonatomic, assign) CGPoint snapShotViewScrollingCenter;//标记最初的selectedSnapShotView.center + offset的值
 @property (nonatomic, assign) CGPoint snapShotViewPanTranslation;//pan手势滑动的距离
 
 @property (nonatomic, assign) CGFloat scrollingSpeed;//拖动item时滑动的速度
@@ -97,9 +98,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 @property (assign, nonatomic, readonly) id<BookShelfCollectionViewDelegateFlowLayout> delegate;
 
 
-@property (assign, nonatomic)BOOL isGroupWillBeginSucceed;
-@property (strong, nonatomic) NSTimer *groupConditionWillBeginTimer;
-@property (assign, nonatomic)BOOL isGrouping;
+@property (assign, nonatomic)BOOL isGroupWillBeginSucceed; //是否成功将要进入分组状态
+@property (strong, nonatomic) NSTimer *groupConditionWillBeginTimer;//满足将要进入分组状态的定时器
+@property (assign, nonatomic)BOOL isGrouping;//是否正在进行grouping
 
 @end
 
@@ -140,12 +141,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 - (void)initCommon{
+    
     self.isGroupWillBeginSucceed = NO;
     self.isGrouping = NO;
 
     _reorderEnabled = YES;
     _groupEnabled = NO;
-    self.scrollingSpeed = 300.f;
+    self.scrollingSpeed = 200.f;
     self.scrollingTriggerEdgeInsets = _scrollingTriggerEdgeInsets = UIEdgeInsetsMake(5.0f, 5.0f, 5.0f, 5.0f);
 }
 
@@ -290,9 +292,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }else if (newIndexPath == nil){
         
         //判断是否到最下边、或最右边，如果是，放在最后一个
-        if ( (self.scrollDirection == UICollectionViewScrollDirectionVertical && (self.selectedSnapShotView.center.y > self.collectionView.contentSize.height - self.selectedSnapShotView.frame.size.height))
+        CGPoint snapShotViewCenterInScorllView = [self convertScreenPositionToScrollPostion:self.selectedSnapShotView.center inScrollView:self.collectionView inScreenView:self.selectedSnapShotViewParentView];
+        
+        if ( (self.scrollDirection == UICollectionViewScrollDirectionVertical && (snapShotViewCenterInScorllView.y > self.collectionView.contentSize.height - self.selectedSnapShotView.frame.size.height))
             
-            || (self.scrollDirection == UICollectionViewScrollDirectionHorizontal && (self.selectedSnapShotView.center.x > self.collectionView.contentSize.width - self.selectedSnapShotView.frame.size.width)))
+            || (self.scrollDirection == UICollectionViewScrollDirectionHorizontal && (snapShotViewCenterInScorllView.x > self.collectionView.contentSize.width - self.selectedSnapShotView.frame.size.width)))
         {
             
             NSInteger lastSection = [self.collectionView numberOfSections] - 1;
@@ -377,7 +381,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     [self groupItemCancelBlinkAnimation:groupIndexPath];
     
-    //成功的分组阶段1也要取消掉
+    //分组阶段1也要取消掉
     [self cancelBeginGroupStageOne:groupIndexPath];
 }
 
@@ -395,8 +399,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         //还在分组的范围内， 分组成功
         if ([self checkPostion:currentPostion inGroupIndexItemFrame:groupPathItemFrame]){
           
-            if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginGroupForItemAtIndexPath:toGroupIndexPath:)]){
-                [self.delegate collectionView:self.collectionView layout:self beginGroupForItemAtIndexPath:self.selectedItemCurrentIndexPath toGroupIndexPath:groupIndexPath];
+            if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginGroupForItemAtIndexPath:toGroupIndexPath:selectedSnapShotView:)]){
+                [self.delegate collectionView:self.collectionView layout:self beginGroupForItemAtIndexPath:self.selectedItemCurrentIndexPath toGroupIndexPath:groupIndexPath selectedSnapShotView:self.selectedSnapShotView];
             }
             
             
@@ -410,23 +414,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }else{
         [self cancelGroupStageTwo:groupIndexPath];
     }
-    
-    self.isGroupWillBeginSucceed = NO;
 }
 
 
-//分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
-- (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
-    //[self cancelGroupStageTwo:groupIndexPath];
-    
-    self.isGrouping = NO;
-}
-
-//分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
-- (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
-    
-   self.isGrouping = NO;
-}
 
 
 
@@ -436,6 +426,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     CGPoint destcenter = groupCell.center;
     destcenter.y = groupCell.center.y + groupCell.frame.size.height /3;
+    destcenter = [self convertScrollPositionToScreenPostion:destcenter inScrollView:self.collectionView inScreenView:self.selectedSnapShotViewParentView];
+    
     CGPoint offset = CGPointMake(destcenter.x - self.selectedSnapShotView.center.x, destcenter.y - self.selectedSnapShotView.center.y);
     
     __weak typeof(self) weakSelf = self;
@@ -443,8 +435,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         __strong typeof(self) strongSelf = weakSelf;
         if (strongSelf){
             
-            strongSelf.snapShotViewScrollingCenter = BS_CGPointAdd(self.snapShotViewScrollingCenter, offset);
-            strongSelf.selectedSnapShotView.center  = BS_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
+            strongSelf.snapShotViewScrollingCenter = BS_CGPointAdd(strongSelf.snapShotViewScrollingCenter, offset);
+            strongSelf.selectedSnapShotView.center  = BS_CGPointAdd(strongSelf.snapShotViewScrollingCenter, strongSelf.snapShotViewPanTranslation);
             
             strongSelf.selectedSnapShotView.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
         }
@@ -461,10 +453,12 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
     [self.selectedSnapShotView.layer removeAllAnimations];
     
+    self.selectedSnapShotView.transform = CGAffineTransformIdentity;
     __weak typeof(self) weakSelf = self;
     [UIView animateWithDuration:0.2 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         __strong typeof(self) strongSelf = weakSelf;
         if (strongSelf){
+            
             
             strongSelf.selectedSnapShotView.transform = CGAffineTransformMakeScale(1.1f, 1.1f);
         }
@@ -500,7 +494,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:groupIndexPath];
     [groupCell.layer removeAllAnimations];
     
-     groupCell.alpha = 0.0;
+     groupCell.alpha = 1.0;
 }
 
 
@@ -556,6 +550,35 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     [groupView removeFromSuperview];
 }
 
+#pragma mark - 分组界面打开后，回到书架界面
+
+//分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
+- (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath withSnapShotView:(UIView *)snapShotView{
+    
+    [self cancelGroupStageTwo:groupIndexPath];
+    self.isGrouping = NO;
+    
+    self.selectedSnapShotView = snapShotView;
+    self.snapShotViewScrollingCenter = snapShotView.center;
+    [self.panGestureRecognizer setTranslation:CGPointZero inView:self.selectedSnapShotViewParentView];
+    
+    [self invalidateLayout];
+}
+
+//分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
+- (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
+    
+    self.isGrouping = NO;
+    
+    [self.selectedSnapShotView removeFromSuperview];
+    self.selectedSnapShotView = nil;
+    
+    self.selectedItemCurrentIndexPath  = nil;
+    self.snapShotViewScrollingCenter = CGPointZero;
+    
+    [self invalidateLayout];
+    
+}
 
 #pragma mark - gesture
 
@@ -584,6 +607,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
 }
 - (void)removeGesture{
+
+    
     if (self.longPressGestureRecognizer){
         UIView *view = self.longPressGestureRecognizer.view;
         if (view){
@@ -611,11 +636,18 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         [self.gestureDelegate handleLongPressGesture:recognizer inGestureView:self.collectionView];
     }
     
+    if(self.isGrouping){
+        return;
+    }
+    
     if (recognizer.state == UIGestureRecognizerStateBegan){
         
         CGPoint location = [recognizer locationInView:self.collectionView];
         NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:location];
-        
+        if (indexPath == nil){
+            return;
+        }
+    
         self.selectedItemCurrentIndexPath = indexPath;
         
         //begin movement
@@ -625,12 +657,14 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         
         //snapshot view
         UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:indexPath];
-        self.selectedSnapShotView = [[UIView alloc] initWithFrame:cell.frame];
+    
+        CGPoint orginPos = [self convertScrollPositionToScreenPostion:cell.frame.origin inScrollView:self.collectionView inScreenView:self.selectedSnapShotViewParentView];
+        self.selectedSnapShotView = [[UIView alloc] initWithFrame:CGRectMake(orginPos.x, orginPos.y, cell.frame.size.width, cell.frame.size.height)];
         UIView *imageView = [cell BS_snapShotView];
         imageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [self.selectedSnapShotView addSubview:imageView];
-        [self.collectionView addSubview:self.selectedSnapShotView];
         
+        [self.selectedSnapShotViewParentView addSubview:self.selectedSnapShotView];
         self.snapShotViewScrollingCenter = self.selectedSnapShotView.center;
         
         __weak typeof(self) weakSelf = self;
@@ -669,7 +703,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             if (strongSelf){
                 
                 strongSelf.selectedSnapShotView.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
-                strongSelf.selectedSnapShotView.center = layoutAttributes.center;
+                CGPoint destCenter = [self convertScrollPositionToScreenPostion:layoutAttributes.center inScrollView:self.collectionView inScreenView:self.selectedSnapShotViewParentView];
+                strongSelf.selectedSnapShotView.center = destCenter;
             }
             
         } completion:^(BOOL finished) {
@@ -697,14 +732,21 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     if (self.gestureDelegate != nil && [self.gestureDelegate respondsToSelector:@selector(handlePanGesture:inGestureView:)]){
         [self.gestureDelegate handlePanGesture:gestureRecognizer inGestureView:self.collectionView];
     }
+    if ([self isGrouping]){
+        return;
+    }
+    if (self.selectedSnapShotView == nil){
+        return;
+    }
     
     switch (gestureRecognizer.state) {
         case UIGestureRecognizerStateBegan:
         case UIGestureRecognizerStateChanged: {
             
             //pan translation
-            self.snapShotViewPanTranslation = [gestureRecognizer translationInView:self.collectionView];
-           
+            
+            self.snapShotViewPanTranslation = [gestureRecognizer translationInView:self.selectedSnapShotViewParentView];
+            
             //update snapshotView center
             CGPoint viewCenter = self.selectedSnapShotView.center = BS_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
             
@@ -715,8 +757,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             switch (self.scrollDirection) {
                 case UICollectionViewScrollDirectionVertical: {
                     
-                    CGFloat topExceedY = (viewCenter.y - hegiht/2) - (CGRectGetMinY(self.collectionView.bounds) - self.scrollingTriggerEdgeInsets.top);
-                    CGFloat bottomExceedtY = (viewCenter.y + hegiht/2) - (CGRectGetMaxY(self.collectionView.bounds) + self.scrollingTriggerEdgeInsets.bottom);
+                    CGFloat topExceedY = (viewCenter.y - hegiht/2) - (CGRectGetMinY(self.collectionView.frame) - self.scrollingTriggerEdgeInsets.top);
+                    CGFloat bottomExceedtY = (viewCenter.y + hegiht/2) - (CGRectGetMaxY(self.collectionView.frame) + self.scrollingTriggerEdgeInsets.bottom);
                     
                     if (topExceedY < 0) {
                         [self caculateScrollSpeed:topExceedY];
@@ -732,8 +774,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                 } break;
                 case UICollectionViewScrollDirectionHorizontal: {
                     
-                    CGFloat leftExceedX = (viewCenter.x - width/2) - (CGRectGetMinX(self.collectionView.bounds) - self.scrollingTriggerEdgeInsets.left);
-                    CGFloat rightExceedX = viewCenter.x + width/2 -  (CGRectGetMaxX(self.collectionView.bounds) + self.scrollingTriggerEdgeInsets.right);
+                    CGFloat leftExceedX = (viewCenter.x - width/2) - (CGRectGetMinX(self.collectionView.frame) - self.scrollingTriggerEdgeInsets.left);
+                    CGFloat rightExceedX = viewCenter.x + width/2 -  (CGRectGetMaxX(self.collectionView.frame) + self.scrollingTriggerEdgeInsets.right);
                     
                     if (leftExceedX < 0) {
                         [self caculateScrollSpeed:leftExceedX];
@@ -819,8 +861,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         } break;
     }
     
-    self.snapShotViewScrollingCenter = BS_CGPointAdd(self.snapShotViewScrollingCenter, translation);
-    self.selectedSnapShotView.center = BS_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
+    //self.snapShotViewScrollingCenter = BS_CGPointAdd(self.snapShotViewScrollingCenter, translation);
+    //self.selectedSnapShotView.center = BS_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
     self.collectionView.contentOffset = BS_CGPointAdd(contentOffset, translation);
     
     [self ajustItemIndexpathIfNecessary];
@@ -830,6 +872,20 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 - (void)caculateScrollSpeed:(CGFloat)exceedDistance{
     
     self.scrollingSpeed = ABS(exceedDistance) * 5 + 200;
+}
+
+#pragma mark - postion
+//collectionview的view的坐标 转换到屏幕上的坐标
+- (CGPoint)convertScrollPositionToScreenPostion:(CGPoint)scrollPostion  inScrollView:(UIScrollView *)scrollView inScreenView:(UIView *)screenView {
+    
+    return [scrollView convertPoint:scrollPostion toView:screenView];
+    
+}
+
+//屏幕上的坐标 转到collcetion中的坐标
+- (CGPoint)convertScreenPositionToScrollPostion:(CGPoint)screenPostion  inScrollView:(UIScrollView *)scrollView  inScreenView:(UIView *)screenView{
+    
+    return [screenView convertPoint:screenPostion toView:scrollView];
 }
 
 
@@ -924,7 +980,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 #pragma mark - UIGestureRecognizerDelegate methods
 
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+    if (self.selectedSnapShotViewParentView == nil){
+        self.selectedSnapShotViewParentView = self.collectionView.window.rootViewController.view;
+    }
+    
+    
     if ([self.panGestureRecognizer isEqual:gestureRecognizer]) {
+       
         return (self.selectedItemCurrentIndexPath != nil);
     }
     return YES;

@@ -17,12 +17,11 @@
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UITextField *groupTitleTextFiled;
 
-@property (strong, nonatomic)BookShelfGroupViewFlowLayout *groupFlowLayout;
+@property (weak, nonatomic) IBOutlet UIView *tabExistView;
 
+@property (strong, nonatomic)BookShelfGroupViewFlowLayout *groupFlowLayout;
 @property (strong, nonatomic)NSMutableArray<ItemData *> * allGroupItems;
 
-
-@property (nonatomic, strong) UIView* selectedSnapShotView;//选中的item的snapShotView
 
 @end
 
@@ -39,6 +38,9 @@
     [self.collectionView registerNib:[UINib nibWithNibName:@"BookCollectionViewCell" bundle:nil] forCellWithReuseIdentifier:@"BookCollectionViewCell"];
 
 
+    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(handleExitTapGesture:)];
+    [self.tabExistView addGestureRecognizer:tapGestureRecognizer];
+    
     self.groupFlowLayout = [[BookShelfGroupViewFlowLayout alloc]init];
     [self.collectionView setCollectionViewLayout:self.groupFlowLayout];
     self.collectionView.delegate = self;
@@ -54,15 +56,18 @@
     [self.allGroupItems addObjectsFromArray:groupedItemData];
     [self.allGroupItems addObject:itemData];
     
+   
+    NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:self.allGroupItems.count - 1 inSection:0];
     
-    self.selectedSnapShotView =  snapView;
-    
-    [self addSubview:self.selectedSnapShotView];
-    
-    [self.collectionView reloadData];
+    [self.groupFlowLayout initSelectSnapShotViewIfNeeded:snapView selectedIndexPath:lastIndexPath];
 }
 
+- (void)dealloc{
+    self.collectionView.dataSource = nil;
+    self.collectionView.delegate = nil;
 
+    self.delegate = nil;
+}
 
 
 #pragma mark - UICollectionViewDataSource
@@ -104,6 +109,25 @@
     return 0;
 }
 
+#pragma mark - BookShelfGroupViewDelegateFlowLayout
+//begin movement
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginMovementForItemAtIndexPath:(NSIndexPath *)indexPath{
+    
+}
+
+//end movement
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout endMovementForItemAtIndexPath:(NSIndexPath *)indexPath{
+    
+}
+
+
+//当拖动的item不再collectionView范围内时，取消分组，为此时选中的item
+- (void)cancelGroupSelectedItemAtIndexPath:(NSIndexPath *)itemIndexPath withSnapShotView:(UIView *)snapShotView{
+    
+    ItemData *itemData = [self.allGroupItems objectAtIndex:itemIndexPath.row];
+    [self cancelGroupWithItemData:itemData withSnapShotView:snapShotView];
+}
+
 
 
 //进行分组时，分组界面需要利用书架界面传过来的手势进行处理。
@@ -114,7 +138,7 @@
     [self.groupFlowLayout handleLongPressGesture:gestureRecognizer];
     
      CGPoint location = [gestureRecognizer locationInView:view];
-    NSLog(@"groupView gesture x = %f, y = %f", location.x, location.y);
+    //NSLog(@"groupView gesture x = %f, y = %f", location.x, location.y);
 }
 
 
@@ -123,8 +147,31 @@
     [self.groupFlowLayout handlePanGesture:gestureRecognizer];
     
     CGPoint location = [gestureRecognizer locationInView:view];
-    NSLog(@"groupView gesture x = %f, y = %f", location.x, location.y);
+   // NSLog(@"groupView gesture x = %f, y = %f", location.x, location.y);
 }
 
+
+#pragma mark - gesture
+- (void)handleExitTapGesture:(UITapGestureRecognizer *)recognizer{
+ 
+    [self finishedGroup];
+}
+
+
+
+#pragma mark - exit group view
+- (void)finishedGroup{
+    
+    if (self.delegate != nil && [self.delegate respondsToSelector:@selector(finishGroupInGroupViewWithGroupData:)]){
+        [self.delegate finishGroupInGroupViewWithGroupData:self.allGroupItems];
+    }
+}
+
+- (void)cancelGroupWithItemData:(ItemData *)itemData withSnapShotView:(UIView *)snapShotView{
+    
+    if (self.delegate != nil && [self.delegate respondsToSelector:@selector(cancelGroupInGroupViewWithItemData:withGroupData:withSnapShotView:)]){
+        [self.delegate cancelGroupInGroupViewWithItemData:itemData withGroupData:self.allGroupItems withSnapShotView:snapShotView];
+    }
+}
 
 @end
