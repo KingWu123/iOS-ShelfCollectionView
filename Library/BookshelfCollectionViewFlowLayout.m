@@ -28,6 +28,15 @@ typedef NS_ENUM(NSInteger, BookShelfScrollingDirection) {
 };
 
 
+//书架分组处于的状态，状态先后顺序为， ready、begin、attach、blink、grouping，如果其中一个状态没跳转成功， 则回到ready状态
+typedef NS_ENUM(NSInteger, BookShelfGroupState) {
+    BookShelfGroupReady,
+    BookShelfGroupBegin,
+    BookShelfGroupAttaching,
+    BookShelfGroupBlink,
+    BookShelfGrouping,
+};
+
 /**
  *  CADisplayLink add an userInfo
  */
@@ -98,9 +107,10 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 @property (assign, nonatomic, readonly) id<BookShelfCollectionViewDelegateFlowLayout> delegate;
 
 
-@property (assign, nonatomic)BOOL isGroupWillBeginSucceed; //是否成功将要进入分组状态
+
 @property (strong, nonatomic) NSTimer *groupConditionWillBeginTimer;//满足将要进入分组状态的定时器
-@property (assign, nonatomic)BOOL isGrouping;//是否正在进行grouping
+@property (assign, nonatomic)BookShelfGroupState groupState; //分组处于的状态
+@property (weak, nonatomic)NSIndexPath *groupIndexPath;
 
 @end
 
@@ -142,8 +152,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 - (void)initCommon{
     
-    self.isGroupWillBeginSucceed = NO;
-    self.isGrouping = NO;
+    self.groupState = BookShelfGroupReady;
 
     _reorderEnabled = YES;
     _groupEnabled = NO;
@@ -208,7 +217,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 - (void)ajustItemIndexpathIfNecessary {
 
     //如果正在进行分组，则不再进行其他处理
-    if (self.isGrouping){
+    if (self.groupState == BookShelfGrouping){
         return;
     }
     
@@ -222,15 +231,15 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     if (newIndexPath == nil){
         [self reorderItemFromIndexPath:previousIndexPath toIndexPath:newIndexPath];
         
-        //分组条件只要不成立，都取消掉定时器
-        [self removeGroupConditionTimer];
+        //分组条件不在不成立
+        [self groupFailedCancelState:self.groupIndexPath];
         return;
     }
     //indexPath没有变化，直接退出
     else if ([previousIndexPath isEqual:newIndexPath]){
-        
-        //分组条件只要不成立，都取消掉定时器
-        [self removeGroupConditionTimer];
+    
+        //分组条件不在成立
+        [self groupFailedCancelState:self.groupIndexPath];
         return;
     }
     
@@ -250,22 +259,26 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         if ([self checkPostion:currentPostion inGroupIndexItemFrame:newIndexPathItemFrame]){
             
             //如果分组开始没有成功， 且没有加入分组定时器的判断，则加入阶段一定时器
-            if (!self.isGroupWillBeginSucceed
-                && self.groupConditionWillBeginTimer == nil){
+            if (self.groupState == BookShelfGroupReady){
                 
                 self.groupConditionWillBeginTimer =  [NSTimer timerWithTimeInterval:0.2 target:self selector:@selector(willBeginGroup:) userInfo:newIndexPath repeats:NO];
                 [[NSRunLoop currentRunLoop] addTimer:self.groupConditionWillBeginTimer forMode:NSRunLoopCommonModes];
+                
+                self.groupIndexPath = newIndexPath;
+                self.groupState = BookShelfGroupBegin;
             }
             
         }else if (currentPostion.x > newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.75){
+           
+            //分组条件不在成立
+            [self groupFailedCancelState:self.groupIndexPath];
+            
             [self reorderItemFromIndexPath:previousIndexPath toIndexPath:newIndexPath];
             
-            //分组条件只要不成立，都取消掉定时器
-            [self removeGroupConditionTimer];
         }else{
             
-            //分组条件只要不成立，都取消掉定时器
-            [self removeGroupConditionTimer];
+            //分组条件不在成立
+            [self groupFailedCancelState:self.groupIndexPath];
         }
     }
     
@@ -338,22 +351,22 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             
             
             [self beginGroupStageOne:groupIndexPath];
-            
-            self.isGroupWillBeginSucceed = YES;
-            
-            NSLog(@"will begin Group");
         }
         
+    }else{
+        [self groupFailedCancelState:self.groupIndexPath];
     }
     
-    [self.groupConditionWillBeginTimer invalidate];
-    self.groupConditionWillBeginTimer = nil;
+   
+    [self removeGroupConditionTimer];
 }
 
 
 //分组阶段1时，被分组的item 要变为分组view显示， selectedItem snapView 黏附到groupItem处， 这个过程
 - (void)beginGroupStageOne:(NSIndexPath *)groupIndexPath{
 
+    self.groupState = BookShelfGroupAttaching;
+    
     [self viewTurnToGroupedItemView:groupIndexPath];
     
     //selectedItem snapView 黏附到groupItem处
@@ -362,60 +375,73 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 //分组阶段1被取消了， 如果被取消，分组进不了阶段2
 - (void)cancelBeginGroupStageOne:(NSIndexPath *)groupIndexPath{
+    
+    
     [self viewOfGroupedItemBackToOriginView:groupIndexPath];
     
-    [self selectedItemDeattachToGroupItem:groupIndexPath];
-    
-    self.isGroupWillBeginSucceed = NO;
+    [self selectedItemDeattachToGroupItem:groupIndexPath completion:^(BOOL finished) {
+         self.groupState = BookShelfGroupReady;
+    }];
 }
 
 
 //分组阶段2， groupItem 闪烁2下
 - (void)beginGroupStageTwo:(NSIndexPath *)groupIndexPath{
     
+    self.groupState = BookShelfGroupBlink;
+    
     [self groupItemStartBlinkAnimation:groupIndexPath];
 }
 
 //取消分组阶段2
-- (void)cancelGroupStageTwo:(NSIndexPath *)groupIndexPath{
+- (void)cancelBeginGroupStageTwo:(NSIndexPath *)groupIndexPath{
     
     [self groupItemCancelBlinkAnimation:groupIndexPath];
     
-    //分组阶段1也要取消掉
+
+    //分组阶段1也要取消掉,阶段1的取消，会置状态为BookShelfGroupReady
     [self cancelBeginGroupStageOne:groupIndexPath];
 }
 
 //分组阶段3， 最后的阶段
 - (void)beginGroupStageEnd:(NSIndexPath *)groupIndexPath{
-    CGPoint currentPostion = [self.panGestureRecognizer locationInView:self.collectionView];
-    NSIndexPath *newIndexPath = [self.collectionView indexPathForItemAtPoint:currentPostion];
     
-
+    self.groupState = BookShelfGrouping;
     
-    if ([newIndexPath isEqual:groupIndexPath]){
-        
-        CGRect groupPathItemFrame = [self.collectionView cellForItemAtIndexPath:newIndexPath].frame;
-        
-        //还在分组的范围内， 分组成功
-        if ([self checkPostion:currentPostion inGroupIndexItemFrame:groupPathItemFrame]){
-          
-            if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginGroupForItemAtIndexPath:toGroupIndexPath:selectedSnapShotView:)]){
-                [self.delegate collectionView:self.collectionView layout:self beginGroupForItemAtIndexPath:self.selectedItemCurrentIndexPath toGroupIndexPath:groupIndexPath selectedSnapShotView:self.selectedSnapShotView];
-            }
-            
-            
-            self.isGrouping = YES;
-            
-            
-        }else{
-            [self cancelGroupStageTwo:groupIndexPath];
-        }
-        
-    }else{
-        [self cancelGroupStageTwo:groupIndexPath];
+    //回调分组成功，进入分组界面
+    if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginGroupForItemAtIndexPath:toGroupIndexPath:selectedSnapShotView:)]){
+        [self.delegate collectionView:self.collectionView layout:self beginGroupForItemAtIndexPath:self.selectedItemCurrentIndexPath toGroupIndexPath:groupIndexPath selectedSnapShotView:self.selectedSnapShotView];
     }
 }
 
+//分组失败的 状态清空处理
+- (void)groupFailedCancelState:(NSIndexPath *)groupIndextPath{
+    switch (self.groupState) {
+        case BookShelfGroupReady: {
+            break;
+        }
+        case BookShelfGroupBegin: {
+            self.groupState = BookShelfGroupReady;
+            [self removeGroupConditionTimer];
+            break;
+        }
+        case BookShelfGroupAttaching: {
+            [self cancelBeginGroupStageOne:groupIndextPath];
+            break;
+        }
+        case BookShelfGroupBlink: {
+            [self cancelBeginGroupStageTwo:groupIndextPath];
+            break;
+        }
+        case BookShelfGrouping: {
+            //--todo--
+            [self cancelBeginGroupStageTwo:groupIndextPath];
+            break;
+        }
+    }
+    
+    self.groupIndexPath = nil;
+}
 
 
 
@@ -425,13 +451,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:groupIndexPath];
     
     CGPoint destcenter = groupCell.center;
-    destcenter.y = groupCell.center.y + groupCell.frame.size.height /3;
     destcenter = [self convertScrollPositionToScreenPostion:destcenter inScrollView:self.collectionView inScreenView:self.selectedSnapShotViewParentView];
+    destcenter.y = self.selectedSnapShotView.center.y;
     
     CGPoint offset = CGPointMake(destcenter.x - self.selectedSnapShotView.center.x, destcenter.y - self.selectedSnapShotView.center.y);
     
     __weak typeof(self) weakSelf = self;
-    [UIView animateWithDuration:0.2 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+    [UIView animateWithDuration:1.3 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         __strong typeof(self) strongSelf = weakSelf;
         if (strongSelf){
             
@@ -441,28 +467,30 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             strongSelf.selectedSnapShotView.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
         }
     } completion:^(BOOL finished) {
-        __strong typeof(self) strongSelf = weakSelf;
-        if (strongSelf) {
+        if(finished){
             
-            [self beginGroupStageTwo:groupIndexPath];
+            __strong typeof(self) strongSelf = weakSelf;
+            if (strongSelf) {
+                [self beginGroupStageTwo:groupIndexPath];
+            }
         }
     }];
 }
 
-- (void)selectedItemDeattachToGroupItem:(NSIndexPath *)groupIndexPath{
+- (void)selectedItemDeattachToGroupItem:(NSIndexPath *)groupIndexPath  completion:(void (^)(BOOL finished))completion {
 
     [self.selectedSnapShotView.layer removeAllAnimations];
     
     self.selectedSnapShotView.transform = CGAffineTransformIdentity;
     __weak typeof(self) weakSelf = self;
-    [UIView animateWithDuration:0.2 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+    [UIView animateWithDuration:0.3 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         __strong typeof(self) strongSelf = weakSelf;
         if (strongSelf){
-            
-            
             strongSelf.selectedSnapShotView.transform = CGAffineTransformMakeScale(1.1f, 1.1f);
         }
     } completion:^(BOOL finished) {
+        
+        completion(finished);
     }];
 }
 
@@ -473,7 +501,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:groupIndexPath];
     
-    [UIView animateKeyframesWithDuration:0.4 delay:0.0 options:UIViewKeyframeAnimationOptionAutoreverse animations:^{
+    [UIView animateKeyframesWithDuration:1.4 delay:0.0 options:UIViewKeyframeAnimationOptionAutoreverse animations:^{
         
         
         [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:0.1 animations:^{
@@ -484,8 +512,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         }];
         
     } completion:^(BOOL finished) {
-        
-        [self beginGroupStageEnd:groupIndexPath];
+        if (finished){
+            [self beginGroupStageEnd:groupIndexPath];
+        }
         
     }];
 }
@@ -555,8 +584,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 //分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
 - (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath withSnapShotView:(UIView *)snapShotView{
     
-    [self cancelGroupStageTwo:groupIndexPath];
-    self.isGrouping = NO;
+    [self groupFailedCancelState:groupIndexPath];
+    
     
     self.selectedSnapShotView = snapShotView;
     self.snapShotViewScrollingCenter = snapShotView.center;
@@ -567,9 +596,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 //分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
 - (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
-    [self cancelGroupStageTwo:groupIndexPath];
+    [self groupFailedCancelState:groupIndexPath];
     
-    self.isGrouping = NO;
     
     [self.selectedSnapShotView removeFromSuperview];
     self.selectedSnapShotView = nil;
@@ -642,7 +670,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         [self.gestureDelegate handleLongPressGesture:recognizer inGestureView:self.collectionView];
     }
     
-    if(self.isGrouping){
+    if(self.groupState == BookShelfGrouping){
         return;
     }
     
@@ -693,6 +721,10 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         if (self.selectedItemCurrentIndexPath == nil){
             return;
         }
+        //如果处于正在进行分组前的状态流程，则充值分组状态
+        if (self.groupState != BookShelfGroupReady && self.groupState != BookShelfGrouping){
+            [self groupFailedCancelState:self.groupIndexPath];
+        }
     
         
         NSIndexPath *currentIndexPath = self.selectedItemCurrentIndexPath;
@@ -738,7 +770,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     if (self.gestureDelegate != nil && [self.gestureDelegate respondsToSelector:@selector(handlePanGesture:inGestureView:)]){
         [self.gestureDelegate handlePanGesture:gestureRecognizer inGestureView:self.collectionView];
     }
-    if ([self isGrouping]){
+    if (self.groupState == BookShelfGrouping){
         return;
     }
     if (self.selectedSnapShotView == nil){
