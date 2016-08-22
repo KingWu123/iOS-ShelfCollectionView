@@ -28,6 +28,15 @@ typedef NS_ENUM(NSInteger, BookShelfScrollingDirection) {
 };
 
 
+typedef NS_ENUM(NSInteger, BookShelfGestureMoveDirection) {
+    BookShelfGestureMoveDirectionUnknown = 0,
+   // BookShelfGestureMoveDirectionUp,
+   // BookShelfGestureMoveDirectionDown,
+    BookShelfGestureMoveDirectionLeft,
+    BookShelfGestureMoveDirectionRight,
+};
+
+
 //书架分组处于的状态，状态先后顺序为， ready、begin、attach、blink、grouping，如果其中一个状态没跳转成功， 则回到ready状态
 typedef NS_ENUM(NSInteger, BookShelfGroupState) {
     BookShelfGroupReady,
@@ -102,6 +111,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 @property (strong, nonatomic) UILongPressGestureRecognizer *longPressGestureRecognizer;
 @property (strong, nonatomic) UIPanGestureRecognizer *panGestureRecognizer;
 
+@property (assign, nonatomic) BookShelfGestureMoveDirection gestureMoveDirection;//手势移动的方向
+
 
 @property (assign, nonatomic, readonly) id<BookShelfCollectionViewDataSource> dataSource;
 @property (assign, nonatomic, readonly) id<BookShelfCollectionViewDelegateFlowLayout> delegate;
@@ -151,6 +162,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 - (void)initCommon{
+    self.gestureMoveDirection = BookShelfGestureMoveDirectionUnknown;
     
     self.groupState = BookShelfGroupReady;
 
@@ -223,11 +235,12 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     BOOL selectedItemIsGrouped = [self.dataSource respondsToSelector:@selector(collectionView:isGroupedItemAtIndexPath:)] ?  [self.dataSource collectionView:self.collectionView isGroupedItemAtIndexPath:self.selectedItemCurrentIndexPath] : NO;
     
-    CGPoint currentPostion = [self.panGestureRecognizer locationInView:self.collectionView];
+   // CGPoint currentPostion = [self.panGestureRecognizer locationInView:self.collectionView];
+    CGPoint currentPostion = [self convertScreenPositionToScrollPostion:self.selectedSnapShotView.center inScrollView:self.collectionView inScreenView:self.selectedSnapShotViewParentView];
     NSIndexPath *newIndexPath = [self.collectionView indexPathForItemAtPoint:currentPostion];
     NSIndexPath *previousIndexPath = self.selectedItemCurrentIndexPath;
     
-    //如果新的位置不存在，则可能是滑到底边了，不可能是进行分组，直接进行排序尝试
+    //如果新的位置不存在，则可能是滑到最后一个，或则第一个之外，不可能是进行分组，直接进行排序尝试
     if (newIndexPath == nil){
         [self reorderItemFromIndexPath:previousIndexPath toIndexPath:newIndexPath];
         
@@ -249,7 +262,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     //如果选中的item是分组，或者分组功能关闭了，则直接进行排序尝试
     if (selectedItemIsGrouped || !self.groupEnabled){
        
-        if (currentPostion.x > newIndexPathItemFrame.size.width/8){
+        if ((self.gestureMoveDirection == BookShelfGestureMoveDirectionRight && currentPostion.x > newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.75)
+            || (self.gestureMoveDirection == BookShelfGestureMoveDirectionLeft && currentPostion.x < newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.25)){
+            
             [self reorderItemFromIndexPath:previousIndexPath toIndexPath:newIndexPath];
         }
         
@@ -261,14 +276,15 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             //如果分组开始没有成功， 且没有加入分组定时器的判断，则加入阶段一定时器
             if (self.groupState == BookShelfGroupReady){
                 
-                self.groupConditionWillBeginTimer =  [NSTimer timerWithTimeInterval:0.2 target:self selector:@selector(willBeginGroup:) userInfo:newIndexPath repeats:NO];
+                self.groupConditionWillBeginTimer =  [NSTimer timerWithTimeInterval:0.5 target:self selector:@selector(willBeginGroup:) userInfo:newIndexPath repeats:NO];
                 [[NSRunLoop currentRunLoop] addTimer:self.groupConditionWillBeginTimer forMode:NSRunLoopCommonModes];
                 
                 self.groupIndexPath = newIndexPath;
                 self.groupState = BookShelfGroupBegin;
             }
             
-        }else if (currentPostion.x > newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.75){
+        }else if ((self.gestureMoveDirection == BookShelfGestureMoveDirectionRight && currentPostion.x > newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.75)
+              || (self.gestureMoveDirection == BookShelfGestureMoveDirectionLeft && currentPostion.x < newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.25)){
            
             //分组条件不在成立
             [self groupFailedCancelState:self.groupIndexPath];
@@ -307,27 +323,65 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         //判断是否到最下边、或最右边，如果是，放在最后一个
         CGPoint snapShotViewCenterInScorllView = [self convertScreenPositionToScrollPostion:self.selectedSnapShotView.center inScrollView:self.collectionView inScreenView:self.selectedSnapShotViewParentView];
         
-        if ( (self.scrollDirection == UICollectionViewScrollDirectionVertical && (snapShotViewCenterInScorllView.y > self.collectionView.contentSize.height - self.selectedSnapShotView.frame.size.height))
+        NSInteger lastSection = [self.collectionView numberOfSections] - 1;
+        NSInteger lastRow = [self.collectionView numberOfItemsInSection:lastSection] - 1;
+        NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:lastRow inSection:lastSection];
+        UICollectionViewCell *lastCell = [self.collectionView cellForItemAtIndexPath:lastIndexPath];
+        
+        NSIndexPath *firstIndexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+        UICollectionViewCell *firstCell = [self.collectionView cellForItemAtIndexPath:firstIndexPath];
+        
+        //竖直方向
+        if ( self.scrollDirection == UICollectionViewScrollDirectionVertical){
             
-            || (self.scrollDirection == UICollectionViewScrollDirectionHorizontal && (snapShotViewCenterInScorllView.x > self.collectionView.contentSize.width - self.selectedSnapShotView.frame.size.width)))
-        {
             
-            NSInteger lastSection = [self.collectionView numberOfSections] - 1;
-            NSInteger lastRow = [self.collectionView numberOfItemsInSection:lastSection] - 1;
-            NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:lastRow inSection:lastSection];
-            
-            
-            if (![self.selectedItemCurrentIndexPath isEqual:lastIndexPath]){
-                self.selectedItemCurrentIndexPath = lastIndexPath;
-                [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
-                
-                //交换数据
-                if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
-                    [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
+            //超过最后一个
+            if (snapShotViewCenterInScorllView.y > self.collectionView.contentSize.height - self.selectedSnapShotView.frame.size.height && snapShotViewCenterInScorllView.x > CGRectGetMaxX(lastCell.frame)){
+               
+                if (![self.selectedItemCurrentIndexPath isEqual:lastIndexPath]){
+                   
+                    self.selectedItemCurrentIndexPath = lastIndexPath;
+                    [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
                     
+                    //交换数据
+                    if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
+                        [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
+                        
+                    }
                 }
             }
+            //超出第一个
+            else if (snapShotViewCenterInScorllView.y < firstCell.frame.origin.y + firstCell.frame.size.height * 0.6
+                     && snapShotViewCenterInScorllView.x < firstCell.frame.size.width * 0.25){
+                
+                if (![self.selectedItemCurrentIndexPath isEqual:firstIndexPath]){
+                    
+                    self.selectedItemCurrentIndexPath = firstIndexPath;
+                    [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:firstIndexPath];
+                    
+                    //交换数据
+                    if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
+                        [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:firstIndexPath];
+                        
+                    }
+                }
+            }
+//            //屏幕的最右边
+//            else if (snapShotViewCenterInScorllView.x > self.collectionView.contentSize.width){
+//                
+//            }
+//            //屏幕的最左边
+//            else if (snapShotViewCenterInScorllView.x < 0){
+//                
+//            }
+            
         }
+        
+        //水平方向 --todo--
+        else if (self.scrollDirection == UICollectionViewScrollDirectionHorizontal){
+            
+        }
+        
     }
 
 }
@@ -338,26 +392,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 - (void)willBeginGroup:(NSTimer *)timer{
     
     NSIndexPath *groupIndexPath = timer.userInfo;
-    CGPoint currentPostion = [self.panGestureRecognizer locationInView:self.collectionView];
-    NSIndexPath *newIndexPath = [self.collectionView indexPathForItemAtPoint:currentPostion];
-    
-    if ([newIndexPath isEqual:groupIndexPath]){
-        
-        UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:newIndexPath];
-        CGRect groupPathItemFrame = groupCell.frame;
-        
-        //在分组范围内停留了时间满足
-        if ([self checkPostion:currentPostion inGroupIndexItemFrame:groupPathItemFrame]){
             
-            
-            [self beginGroupStageOne:groupIndexPath];
-        }
-        
-    }else{
-        [self groupFailedCancelState:self.groupIndexPath];
-    }
-    
-   
+    [self beginGroupStageOne:groupIndexPath];
+
     [self removeGroupConditionTimer];
 }
 
@@ -457,7 +494,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     CGPoint offset = CGPointMake(destcenter.x - self.selectedSnapShotView.center.x, destcenter.y - self.selectedSnapShotView.center.y);
     
     __weak typeof(self) weakSelf = self;
-    [UIView animateWithDuration:1.3 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+    [UIView animateWithDuration:0.3 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         __strong typeof(self) strongSelf = weakSelf;
         if (strongSelf){
             
@@ -501,13 +538,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:groupIndexPath];
     
-    [UIView animateKeyframesWithDuration:1.4 delay:0.0 options:UIViewKeyframeAnimationOptionAutoreverse animations:^{
+    [UIView animateKeyframesWithDuration:0.6 delay:0.0 options:UIViewKeyframeAnimationOptionAutoreverse animations:^{
         
         
-        [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:0.1 animations:^{
+        [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:0.15 animations:^{
             groupCell.alpha = 0.0;
         }];
-        [UIView addKeyframeWithRelativeStartTime:0.1 relativeDuration:0.2 animations:^{
+        [UIView addKeyframeWithRelativeStartTime:0.15 relativeDuration:0.3 animations:^{
             groupCell.alpha = 1.0;
         }];
         
@@ -589,6 +626,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     self.selectedSnapShotView = snapShotView;
     self.snapShotViewScrollingCenter = snapShotView.center;
+    self.snapShotViewPanTranslation = CGPointZero;
     [self.panGestureRecognizer setTranslation:CGPointZero inView:self.selectedSnapShotViewParentView];
     
     [self invalidateLayout];
@@ -604,6 +642,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     self.selectedItemCurrentIndexPath  = nil;
     self.snapShotViewScrollingCenter = CGPointZero;
+    self.snapShotViewPanTranslation = CGPointZero;
     
     [self invalidateLayout];
     
@@ -700,6 +739,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         
         [self.selectedSnapShotViewParentView addSubview:self.selectedSnapShotView];
         self.snapShotViewScrollingCenter = self.selectedSnapShotView.center;
+        self.snapShotViewPanTranslation = CGPointZero;
         
         __weak typeof(self) weakSelf = self;
         [UIView animateWithDuration:0.2 delay:0.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
@@ -782,8 +822,14 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         case UIGestureRecognizerStateChanged: {
             
             //pan translation
+            CGPoint panTranslation = [gestureRecognizer translationInView:self.selectedSnapShotViewParentView];
+            if (self.snapShotViewPanTranslation.x < panTranslation.x){
+                self.gestureMoveDirection = BookShelfGestureMoveDirectionRight;
+            }else {
+                self.gestureMoveDirection = BookShelfGestureMoveDirectionLeft;
+            }
+            self.snapShotViewPanTranslation = panTranslation;
             
-            self.snapShotViewPanTranslation = [gestureRecognizer translationInView:self.selectedSnapShotViewParentView];
             
             //update snapshotView center
             CGPoint viewCenter = self.selectedSnapShotView.center = BS_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
