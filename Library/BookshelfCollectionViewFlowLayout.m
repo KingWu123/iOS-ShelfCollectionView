@@ -257,13 +257,10 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }
     
     
-    CGRect newIndexPathItemFrame = [self.collectionView cellForItemAtIndexPath:newIndexPath].frame;
-    
     //如果选中的item是分组，或者分组功能关闭了，则直接进行排序尝试
     if (selectedItemIsGrouped || !self.groupEnabled){
        
-        if ((self.gestureMoveDirection == BookShelfGestureMoveDirectionRight && currentPostion.x > newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.75)
-            || (self.gestureMoveDirection == BookShelfGestureMoveDirectionLeft && currentPostion.x < newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.25)){
+        if ([self checkPostion:currentPostion needReorderAtNewIndexPath:newIndexPath]){
             
             [self reorderItemFromIndexPath:previousIndexPath toIndexPath:newIndexPath];
         }
@@ -271,7 +268,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }else{
         
         //如果手指的位置 在新的itemFrame的 0.3---0.7 范围内，且停留在那里的时间满足要求， 则进行分组流程处理
-        if ([self checkPostion:currentPostion inGroupIndexItemFrame:newIndexPathItemFrame]){
+        if ([self checkPostion:currentPostion inGroupIndex:newIndexPath]){
             
             //如果分组开始没有成功， 且没有加入分组定时器的判断，则加入阶段一定时器
             if (self.groupState == BookShelfGroupReady){
@@ -283,8 +280,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                 self.groupState = BookShelfGroupBegin;
             }
             
-        }else if ((self.gestureMoveDirection == BookShelfGestureMoveDirectionRight && currentPostion.x > newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.75)
-              || (self.gestureMoveDirection == BookShelfGestureMoveDirectionLeft && currentPostion.x < newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.25)){
+        }else if([self checkPostion:currentPostion needReorderAtNewIndexPath:newIndexPath]){
            
             //分组条件不在成立
             [self groupFailedCancelState:self.groupIndexPath];
@@ -567,7 +563,10 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 
 //判断位置是否在分组的item frame 范围内
-- (BOOL)checkPostion:(CGPoint )postion inGroupIndexItemFrame:(CGRect)itemframe{
+- (BOOL)checkPostion:(CGPoint )postion inGroupIndex:(NSIndexPath *)newIndexPath{
+    
+    CGRect itemframe = [self.collectionView cellForItemAtIndexPath:newIndexPath].frame;
+    
     if( postion.x > itemframe.origin.x + itemframe.size.width * 0.3
        && postion.x < itemframe.origin.x + itemframe.size.width * 0.7
        && postion.y > itemframe.origin.y + itemframe.size.height * 0.2
@@ -577,6 +576,67 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         return NO;
     }
 }
+
+//判断当前的snapShotView所处的位置，是否需要进行reorder
+- (BOOL)checkPostion:(CGPoint )currentPostion needReorderAtNewIndexPath:(NSIndexPath *)newIndexPath{
+    
+    CGRect newIndexPathItemFrame = [self.collectionView cellForItemAtIndexPath:newIndexPath].frame;
+
+    //向右滑动
+    if(self.gestureMoveDirection == BookShelfGestureMoveDirectionRight
+       && currentPostion.x > newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.75){
+        
+        
+        NSIndexPath *nextIndexPath = [self collectionView:self.collectionView nextIndexPathByCurrentIndexPath:newIndexPath];
+        //向右滑动，如果下一个indexPath 已经是自己，不需要换位置
+        if (![nextIndexPath isEqual:self.selectedItemCurrentIndexPath]){
+            return YES;
+        }
+        
+    }
+    else if (self.gestureMoveDirection == BookShelfGestureMoveDirectionLeft && currentPostion.x < newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.25){
+        
+        NSIndexPath *preIndexPath = [self collectionView:self.collectionView preIndexPathByCurrentIndexPath:newIndexPath];
+        
+        if (![preIndexPath isEqual:self.selectedItemCurrentIndexPath]){
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (NSIndexPath *)collectionView:(UICollectionView *)collectionView nextIndexPathByCurrentIndexPath:(NSIndexPath *)currentIndexPath{
+    NSInteger currentRow = currentIndexPath.row;
+    NSInteger currentSection = currentIndexPath.section;
+    NSInteger totalRowAtCurrentSection = [collectionView numberOfItemsInSection:currentSection];
+    if (currentRow < totalRowAtCurrentSection -1){
+        return [NSIndexPath indexPathForRow:currentRow + 1 inSection:currentSection];
+    }else{
+        if (currentSection < [collectionView numberOfSections] - 1){
+            return [NSIndexPath indexPathForRow:0 inSection:currentSection + 1];
+        }
+    }
+    
+    return nil;
+}
+
+- (NSIndexPath *)collectionView:(UICollectionView *)collectionView preIndexPathByCurrentIndexPath:(NSIndexPath *)currentIndexPath{
+    
+    NSInteger currentRow = currentIndexPath.row;
+    NSInteger currentSection = currentIndexPath.section;
+    
+    if (currentRow > 0){
+        return [NSIndexPath indexPathForRow:currentRow -1 inSection:currentSection];
+    }else{
+        if (currentSection > 0){
+            NSInteger preRow = [collectionView numberOfItemsInSection: currentSection -1];
+            return  [NSIndexPath indexPathForRow:preRow -1 inSection:currentSection];
+        }
+    }
+    
+    return nil;
+}
+
 - (void)removeGroupConditionTimer{
     if (self.groupConditionWillBeginTimer != nil){
         [self.groupConditionWillBeginTimer invalidate];
