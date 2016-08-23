@@ -20,8 +20,12 @@
     // Initialization code
 }
 
-- (void)initCellWithIndex:(NSString *)indexStr{
-    self.numberIndexLabel.text = indexStr;
+- (void)initCellWithItemData:(ItemData *)itemData{
+    self.numberIndexLabel.text = itemData.title;
+}
+
+- (void)prepareForReuse{
+    [self.numberIndexLabel setText:nil];
 }
 
 @end

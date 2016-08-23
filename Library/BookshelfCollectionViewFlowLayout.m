@@ -8,7 +8,7 @@
 
 #import "BookshelfCollectionViewFlowLayout.h"
 #import <objc/runtime.h>
-
+#import "UICollectionView+MathIndexPath.h"
 
 
 
@@ -241,7 +241,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     NSIndexPath *previousIndexPath = self.selectedItemCurrentIndexPath;
     
     
-    //如果分组过程中，snapShotView位置indexPath变化了，则取消分组过程
+    //如果分组过程中，groupingIndexPath 与 snapShotView位置indexPath不同了，则取消分组过程
     if (self.groupingIndexPath != nil && ![self.groupingIndexPath isEqual: newIndexPath]){
       
         [self groupFailedCancelState:self.groupingIndexPath];
@@ -340,7 +340,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                     self.selectedItemCurrentIndexPath = lastIndexPath;
                     [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
                     
-                    
                     //交换数据
                     if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
                         [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
@@ -386,87 +385,34 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 
-
 //判断当前的snapShotView所处的位置，是否需要进行reorder
 - (BOOL)checkPostion:(CGPoint )currentPostion needReorderAtNewIndexPath:(NSIndexPath *)newIndexPath{
     
     CGRect newIndexPathItemFrame = [self.collectionView cellForItemAtIndexPath:newIndexPath].frame;
     
-    //只要不是向左滑动，且在右边的区域范围内
+    //只要不是向左滑动，就认为是向右滑动
     if(self.gestureMoveDirection != BookShelfGestureMoveDirectionLeft
        && currentPostion.x > newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.75){
         
         
-        NSIndexPath *nextIndexPath = [self collectionView:self.collectionView nextIndexPathByCurrentIndexPath:newIndexPath];
+        NSIndexPath *nextIndexPath = [self.collectionView nextIndexPathByCurrentIndexPath:newIndexPath];
         //向右滑动，如果下一个indexPath 已经是自己，不需要换位置
         if (![nextIndexPath isEqual:self.selectedItemCurrentIndexPath]){
             return YES;
         }
         
     }
-    //不是向右滑动，且的左边的区域范围内
+    //不是向右滑动，就认为是向左滑动
     else if (self.gestureMoveDirection != BookShelfGestureMoveDirectionRight
              && currentPostion.x < newIndexPathItemFrame.origin.x + newIndexPathItemFrame.size.width * 0.25){
         
-        NSIndexPath *preIndexPath = [self collectionView:self.collectionView preIndexPathByCurrentIndexPath:newIndexPath];
+        NSIndexPath *preIndexPath = [self.collectionView preIndexPathByCurrentIndexPath:newIndexPath];
         
         if (![preIndexPath isEqual:self.selectedItemCurrentIndexPath]){
             return YES;
         }
     }
     return NO;
-}
-
-//获得collectionView  currentIndexPath的下一个indexPath
-- (NSIndexPath *)collectionView:(UICollectionView *)collectionView nextIndexPathByCurrentIndexPath:(NSIndexPath *)currentIndexPath{
-    NSInteger currentRow = currentIndexPath.row;
-    NSInteger currentSection = currentIndexPath.section;
-    NSInteger totalRowAtCurrentSection = [collectionView numberOfItemsInSection:currentSection];
-    if (currentRow < totalRowAtCurrentSection -1){
-        return [NSIndexPath indexPathForRow:currentRow + 1 inSection:currentSection];
-    }else{
-        if (currentSection < [collectionView numberOfSections] - 1){
-            return [NSIndexPath indexPathForRow:0 inSection:currentSection + 1];
-        }
-    }
-    
-    return nil;
-}
-
-//获得collectionView  currentIndexPath的上一个indexPath
-- (NSIndexPath *)collectionView:(UICollectionView *)collectionView preIndexPathByCurrentIndexPath:(NSIndexPath *)currentIndexPath{
-    
-    NSInteger currentRow = currentIndexPath.row;
-    NSInteger currentSection = currentIndexPath.section;
-    
-    if (currentRow > 0){
-        return [NSIndexPath indexPathForRow:currentRow -1 inSection:currentSection];
-    }else{
-        if (currentSection > 0){
-            NSInteger preRow = [collectionView numberOfItemsInSection: currentSection -1];
-            return  [NSIndexPath indexPathForRow:preRow -1 inSection:currentSection];
-        }
-    }
-    
-    return nil;
-}
-
-/**
- *  比较两个indexPath的大小
- *
- *  @param indexPath
- *  @param toIndexPath
- *
- *  @return indexPath > toIndexPath 返回1， 相等返回0， 小于返回-1
- */
-- (int)compareIndexPath:(NSIndexPath *)indexPath toIndexPath:(NSIndexPath *)toIndexPath{
-    if (toIndexPath.section > indexPath.section || (toIndexPath.section == indexPath.section && toIndexPath.row > indexPath.row)){
-        return -1;
-    }else if (toIndexPath.section == indexPath.section && toIndexPath.row == indexPath.row){
-        return 0;
-    }else{
-        return 1;
-    }
 }
 
 
@@ -526,6 +472,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 - (void)beginGroupStageEnd:(NSIndexPath *)groupIndexPath{
     
     self.groupState = BookShelfGrouping;
+    [self invalidatesScrollTimer];
     
     //回调分组成功，进入分组界面
     if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginGroupForItemAtIndexPath:toGroupIndexPath:selectedSnapShotView:)]){
@@ -730,7 +677,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     //--todo--
     [self groupFailedCancelState:groupIndexPath];
-    
+
     
     [self.selectedSnapShotView removeFromSuperview];
     self.selectedSnapShotView = nil;

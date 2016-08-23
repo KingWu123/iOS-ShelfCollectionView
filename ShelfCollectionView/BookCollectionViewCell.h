@@ -7,9 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ItemData.h"
 
 @interface BookCollectionViewCell : UICollectionViewCell
 
 
-- (void)initCellWithIndex:(NSString *)indexStr;
+- (void)initCellWithItemData:(ItemData *)itemData;
 @end

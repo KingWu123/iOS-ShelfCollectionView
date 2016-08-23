@@ -17,7 +17,7 @@
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UITextField *groupTitleTextFiled;
 
-@property (weak, nonatomic) IBOutlet UIView *tabExistView;
+@property (weak, nonatomic) IBOutlet UIView *tabExitView;
 
 @property (strong, nonatomic)BookShelfGroupViewFlowLayout *groupFlowLayout;
 @property (strong, nonatomic)NSMutableArray<ItemData *> * allGroupItems;
@@ -39,7 +39,7 @@
 
 
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(handleExitTapGesture:)];
-    [self.tabExistView addGestureRecognizer:tapGestureRecognizer];
+    [self.tabExitView addGestureRecognizer:tapGestureRecognizer];
     
     self.groupFlowLayout = [[BookShelfGroupViewFlowLayout alloc]init];
     [self.collectionView setCollectionViewLayout:self.groupFlowLayout];
@@ -80,7 +80,7 @@
     
     BookCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"BookCollectionViewCell" forIndexPath:indexPath];
     
-    [cell initCellWithIndex:[self.allGroupItems objectAtIndex:indexPath.row].title];
+    [cell initCellWithItemData:[self.allGroupItems objectAtIndex:indexPath.row]];
     return cell;
 }
 
@@ -121,11 +121,17 @@
 }
 
 
-//当拖动的item不再collectionView范围内时，取消分组，为此时选中的item
+//当拖动的item不再collectionView范围内时，取消分组
 - (void)cancelGroupSelectedItemAtIndexPath:(NSIndexPath *)itemIndexPath withSnapShotView:(UIView *)snapShotView{
     
     ItemData *itemData = [self.allGroupItems objectAtIndex:itemIndexPath.row];
     [self cancelGroupWithItemData:itemData withSnapShotView:snapShotView];
+}
+
+#pragma mark - gesture
+- (void)handleExitTapGesture:(UITapGestureRecognizer *)recognizer{
+    
+    [self finishedGroup];
 }
 
 
@@ -136,26 +142,15 @@
 - (void)handleLongPressGesture:(UILongPressGestureRecognizer *)gestureRecognizer inGestureView:(UIView*)view{
    
     [self.groupFlowLayout handleLongPressGesture:gestureRecognizer];
-    
-     CGPoint location = [gestureRecognizer locationInView:view];
-    //NSLog(@"groupView gesture x = %f, y = %f", location.x, location.y);
 }
 
 
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gestureRecognizer inGestureView:(UIView *)view{
     
     [self.groupFlowLayout handlePanGesture:gestureRecognizer];
-    
-    CGPoint location = [gestureRecognizer locationInView:view];
-   // NSLog(@"groupView gesture x = %f, y = %f", location.x, location.y);
 }
 
 
-#pragma mark - gesture
-- (void)handleExitTapGesture:(UITapGestureRecognizer *)recognizer{
- 
-    [self finishedGroup];
-}
 
 
 
@@ -169,8 +164,11 @@
 
 - (void)cancelGroupWithItemData:(ItemData *)itemData withSnapShotView:(UIView *)snapShotView{
     
+    NSMutableArray *groupItems = [NSMutableArray arrayWithArray:self.allGroupItems];
+    [groupItems removeObject:itemData];
+    
     if (self.delegate != nil && [self.delegate respondsToSelector:@selector(cancelGroupInGroupViewWithItemData:withGroupData:withSnapShotView:)]){
-        [self.delegate cancelGroupInGroupViewWithItemData:itemData withGroupData:self.allGroupItems withSnapShotView:snapShotView];
+        [self.delegate cancelGroupInGroupViewWithItemData:itemData withGroupData:groupItems withSnapShotView:snapShotView];
     }
 }
 

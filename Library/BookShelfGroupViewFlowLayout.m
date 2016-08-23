@@ -71,10 +71,12 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 
 
-#pragma mark - BookshelfCollectionViewFlowLayout
+
+
+#pragma mark - BookShelfGroupViewFlowLayout
 
 /**
- *  实现一个类似于能够对书籍进行排序、分组功能的的书架功能，类似于iphone手机界面对应用图标进行排序、分组。
+ *  分组界面只有reorder的功能
  */
 @interface BookShelfGroupViewFlowLayout()<UIGestureRecognizerDelegate>
 
@@ -203,7 +205,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 //判断选中的item是否要换到新的位置或进行分组
 - (void)ajustItemIndexpathIfNecessary {
     
-    CGPoint currentPostion = [self.panGestureRecognizer locationInView:self.collectionView];
+    //CGPoint currentPostion = [self.panGestureRecognizer locationInView:self.collectionView];
+    CGPoint currentPostion = [self convertScreenPositionToScrollPostion:self.selectedSnapShotView.center inScrollView:self.collectionView inScreenView:self.selectedSnapShotViewParentView];
+    
     
     NSIndexPath *newIndexPath = [self.collectionView indexPathForItemAtPoint:currentPostion];
     NSIndexPath *previousIndexPath = self.selectedItemCurrentIndexPath;
@@ -508,8 +512,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         } break;
     }
     
-   // self.snapShotViewScrollingCenter = BG_CGPointAdd(self.snapShotViewScrollingCenter, translation);
-   // self.selectedSnapShotView.center = BG_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
     self.collectionView.contentOffset = BG_CGPointAdd(contentOffset, translation);
     
     [self ajustItemIndexpathIfNecessary];

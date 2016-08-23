@@ -12,6 +12,8 @@
 #import "BookshelfCollectionViewFlowLayout.h"
 #import "ItemData.h"
 #import "BookShelfGroupMainView.h"
+#import "BookGroupCollectionViewCell.h"
+#import "UICollectionView+MathIndexPath.h"
 
 
 
@@ -20,7 +22,7 @@
 
 
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
-@property (nonatomic, strong)NSMutableArray<ItemData *> *modelSource;
+@property (nonatomic, strong)NSMutableArray *modelSource;
 
 @property (weak, nonatomic)BookshelfCollectionViewFlowLayout *bookShelfFlowLayout;
 
@@ -37,7 +39,7 @@
     // Do any additional setup after loading the view, typically from a nib.
     
     [self.collectionView registerNib:[UINib nibWithNibName:@"BookCollectionViewCell" bundle:nil] forCellWithReuseIdentifier:@"BookCollectionViewCell"];
-    
+     [self.collectionView registerNib:[UINib nibWithNibName:@"BookGroupCollectionViewCell" bundle:nil] forCellWithReuseIdentifier:@"BookGroupCollectionViewCell"];
 
     //UICollectionViewLayoutAttributes
     
@@ -49,6 +51,7 @@
     //init modelSource
     float width = [[UIScreen mainScreen]bounds].size.width /3;
     
+    NSMutableArray *groupItems = [[NSMutableArray alloc]init];
     self.modelSource = [[NSMutableArray alloc]init];
     for (int i=0; i<100; i++){
         
@@ -58,10 +61,35 @@
 //        }else if (i%3 == 1){
 //            height += 30;
 //        }
+        
         CGSize itemSize = CGSizeMake(width, height);
         ItemData *itemData = [[ItemData alloc]initWithTitle:[NSString stringWithFormat:@"book %d", i] itemSize:itemSize];
-        [self.modelSource addObject:itemData];
+        
+        
+        
+        if (i >= 10 && i<=13){
+            [groupItems addObject:itemData];
+            
+            if (i==13){
+                NSArray *tempDataArr = [NSArray arrayWithArray:[groupItems copy]];
+                [self.modelSource addObject:tempDataArr];
+                [groupItems removeAllObjects];
+            }
+        }else if (i >= 20 && i <=25){
+            [groupItems addObject:itemData];
+            
+            if (i==25){
+                NSArray *tempDataArr = [NSArray arrayWithArray:[groupItems copy]];
+                [self.modelSource addObject:tempDataArr];
+                [groupItems removeAllObjects];
+            }
+        }else{
+            [self.modelSource addObject:itemData];
+        }
     }
+    
+    
+  
 }
 
 - (void)didReceiveMemoryWarning {
@@ -89,10 +117,19 @@
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
-    BookCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"BookCollectionViewCell" forIndexPath:indexPath];
+    id itemData = [self.modelSource objectAtIndex:indexPath.row];
     
-    [cell initCellWithIndex:[self.modelSource objectAtIndex:indexPath.row].title];
-    return cell;
+    if ([itemData isKindOfClass:[ItemData class]]){
+    
+        BookCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"BookCollectionViewCell" forIndexPath:indexPath];
+    
+        [cell initCellWithItemData:itemData];
+        return cell;
+    }else {
+        BookGroupCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"BookGroupCollectionViewCell" forIndexPath:indexPath];
+        [cell initCellWithDatas:itemData];
+        return cell;
+    }
 }
 
 
@@ -109,14 +146,30 @@
 }
 
 
-
+- (BOOL)collectionView:(UICollectionView *)collectionView isGroupedItemAtIndexPath:(NSIndexPath *)indexPath{
+    id itemData = [self.modelSource objectAtIndex:indexPath.row];
+    if ([itemData isKindOfClass:[NSArray class]]){
+        return YES;
+    }
+    return NO;
+}
 #pragma mark - UICollectionViewDelegate
 
 
 #pragma mark - UICollectionViewDelegateFlowLayout
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
+   
+    id itemData = [self.modelSource objectAtIndex:indexPath.row];
     
-    return [self.modelSource objectAtIndex:indexPath.row].itemSize;
+    if ([itemData isKindOfClass:[ItemData class]]){
+        return ((ItemData *)[self.modelSource objectAtIndex:indexPath.row]).itemSize;
+    }else{
+        float width = [[UIScreen mainScreen]bounds].size.width /3;
+        float height = width + 50;
+        return  CGSizeMake(width, height);
+
+    }
+    
 }
 
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section{
@@ -140,8 +193,15 @@
     
     
     BookShelfGroupMainView *groupMainView = [BookShelfGroupMainView loadFromNib];
-    [groupMainView initWithItemData:[self.modelSource objectAtIndex:itemIndexPath.row] groupedItemData:@[[self.modelSource objectAtIndex:groupIndexPath.row]] snapView:snaptShotView];
+    id groupData = [self.modelSource objectAtIndex:groupIndexPath.row];
+    if (![groupData isKindOfClass:[NSArray class]]){
+        groupData = @[groupData];
+    }
+    [groupMainView initWithItemData:[self.modelSource objectAtIndex:itemIndexPath.row] groupedItemData:groupData snapView:snaptShotView];
 
+    
+    
+    
     groupMainView.delegate = self;
     self.groupMainView  = groupMainView;
     
@@ -152,48 +212,81 @@
     // 必须这么写， 因为手势都加载collectionView的superView上，collectionView 和 groupMainView需要共用一套手势
     // 因此 groupMainView需要加在collectionView的superView上
     [self.collectionView.superview insertSubview:groupMainView belowSubview:snaptShotView];
-    
+    groupMainView.frame = self.collectionView.superview.bounds;
+    [self openGroupMainView:groupMainView];
 }
+
+
 
 #pragma mark - BookShelfGroupMainViewDelegate
 //用户取消了分组操作
 - (void)cancelGroupInGroupViewWithItemData:(ItemData *)itemData withGroupData:(NSArray<ItemData *> *)groupItemData withSnapShotView:(UIView *)snapShotView{
     
+    
     //分组界面接收书架界面手势的 回调 注销
     self.bookShelfFlowLayout.gestureDelegate = nil;
     
-    //取消分组，用户可能换了一个选中的item，退出来了，这里要处理一下 --todo--
+    //取消分组，用户可能换了一个选中的item，退出来了，这里要处理一下
+    [self.modelSource replaceObjectAtIndex:self.selectedIndexPath.row withObject:itemData];
+    [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
     
-    
-    //移除分组界面
-    [self.groupMainView removeFromSuperview];
-    self.groupMainView = nil;
-    
+
+
     //告知书籍layout,进入分组界面，没有分组，就又退出来了
     [self.bookShelfFlowLayout cancelGroupForItemAtIndexPath:self.selectedIndexPath toGroupIndexPath:self.groupIndexPath withSnapShotView:snapShotView];
+    
+    [self closeGroupMainView:self.groupMainView];
+    [self.collectionView reloadData];
 }
 
 //用户完成了分组操作
 - (void)finishGroupInGroupViewWithGroupData:(NSArray<ItemData *> *)groupItemData{
     //分组界面接收书架界面手势的 回调 注销
-      self.bookShelfFlowLayout.gestureDelegate = nil;
+    self.bookShelfFlowLayout.gestureDelegate = nil;
+
     
-    
-    //合并分组的数据--todo--
-    
+    //合并分组的数据
+    [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
     
     //删除之前被分组的数据
     [self.modelSource removeObjectAtIndex:self.selectedIndexPath.row];
-    //同时删除这个cell
     [self.collectionView deleteItemsAtIndexPaths:@[self.selectedIndexPath]];
     
-    //移除分组界面
-    [self.groupMainView removeFromSuperview];
-    self.groupMainView = nil;
     
+    if ([self.collectionView compareIndexPath:self.selectedIndexPath toIndexPath:self.groupIndexPath] < 0){
+        self.groupIndexPath = [self.collectionView preIndexPathByCurrentIndexPath:self.groupIndexPath];
+    }
+    
+    //告知书籍layout,进入分组界面，进行了分组
     [self.bookShelfFlowLayout finishedGroupForItemAtIndexPath:self.selectedIndexPath toGroupIndexPath:self.groupIndexPath];
+    
+    //移除分组界面
+    [self closeGroupMainView:self.groupMainView];
+
+     [self.collectionView reloadData];
 }
 
+
+- (void)openGroupMainView:(UIView *)groupMainView{
+    
+    groupMainView.alpha = 0.0;
+    [UIView animateWithDuration:0.3 delay:0.0 options:(UIViewAnimationOptionCurveLinear) animations:^{
+        groupMainView.alpha = 1.0;
+    } completion:^(BOOL finished) {
+        
+    }];
+}
+
+- (void)closeGroupMainView:(UIView *)groupMainView{
+    groupMainView.alpha = 1.0;
+    [UIView animateWithDuration:0.3 delay:0.0 options:(UIViewAnimationOptionCurveLinear) animations:^{
+        groupMainView.alpha = 0.0;
+    } completion:^(BOOL finished) {
+        //移除分组界面
+        [self.groupMainView removeFromSuperview];
+        self.groupMainView = nil;
+    }];
+}
 
 
 

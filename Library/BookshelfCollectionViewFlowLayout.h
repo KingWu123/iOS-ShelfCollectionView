@@ -21,9 +21,6 @@
 
 
 
-//itemIndexPath to the groupIndexPath
-//- (void)collectionView:(UICollectionView *)collectionView itemIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath;
-
 @end
 
 

@@ -36,10 +36,13 @@
 
 
 
+
 @interface BookShelfGroupViewFlowLayout : UICollectionViewFlowLayout
 
+//longPress手势是从书架界面传进来的
 - (void)handleLongPressGesture:(UILongPressGestureRecognizer *)recognizer;
 
+//panGesture手势也是从书架界面穿件来的
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gestureRecognizer;
 
 //进入分组界面时， 手势是从底下的书架界面传上来的，因此不会从longPress手势对选中的item进行snapView的初始化，需要自己初始化
