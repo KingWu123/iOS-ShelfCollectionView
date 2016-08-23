@@ -240,21 +240,22 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     NSIndexPath *newIndexPath = [self.collectionView indexPathForItemAtPoint:currentPostion];
     NSIndexPath *previousIndexPath = self.selectedItemCurrentIndexPath;
     
+    
+    //如果分组过程中，snapShotView位置indexPath变化了，则取消分组过程
+    if (self.groupingIndexPath != nil && ![self.groupingIndexPath isEqual: newIndexPath]){
+      
+        [self groupFailedCancelState:self.groupingIndexPath];
+    }
+    
     //如果新的位置不存在，则可能是滑到最后一个，或则第一个之外，不可能是进行分组，直接进行排序尝试
     if (newIndexPath == nil){
-        
-        //分组条件不在不成立
-        [self groupFailedCancelState:self.groupingIndexPath];
-
+    
         [self reorderItemFromIndexPath:previousIndexPath toIndexPath:newIndexPath];
         
         return;
     }
     //indexPath没有变化，直接退出
     else if ([previousIndexPath isEqual:newIndexPath]){
-    
-        //分组条件不在成立
-        [self groupFailedCancelState:self.groupingIndexPath];
         return;
     }
     
@@ -307,16 +308,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         self.selectedItemCurrentIndexPath = newIndexPath;
         [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
         
-        //如果在分组取消过程中，又有reoder的变化，此时groupIndexPath需要进行调整
-        if (self.groupingIndexPath != nil){
-            if ([self compareIndexPath:previousIndexPath toIndexPath:newIndexPath] < 0){
-                self.groupingIndexPath = [self collectionView:self.collectionView preIndexPathByCurrentIndexPath:self.groupingIndexPath];
-            }else{
-                 self.groupingIndexPath = [self collectionView:self.collectionView nextIndexPathByCurrentIndexPath:self.groupingIndexPath];
-            }
-            NSLog(@"---11111111111");
-        }
-       
+        
         //交换数据
         if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
             [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
@@ -349,14 +341,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                     [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
                     
                     
-                    //如果在分组取消过程中，又有reoder的变化，此时groupIndexPath需要进行调整
-                    if (self.groupingIndexPath != nil){
-                        self.groupingIndexPath = [self collectionView:self.collectionView preIndexPathByCurrentIndexPath:self.groupingIndexPath];
-                        NSLog(@"----222222222");
-                    }
-
-                    
-                    
                     //交换数据
                     if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
                         [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
@@ -373,12 +357,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                     self.selectedItemCurrentIndexPath = firstIndexPath;
                     [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:firstIndexPath];
                     
-                    //如果在分组取消过程中，又有reoder的变化，此时groupIndexPath需要进行调整
-                    if (self.groupingIndexPath != nil){
-                        self.groupingIndexPath = [self collectionView:self.collectionView nextIndexPathByCurrentIndexPath:self.groupingIndexPath];
-                        NSLog(@"----33333333333");
-                    }
-
                     
                     //交换数据
                     if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
@@ -644,13 +622,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:groupIndexPath];
     
-    [UIView animateKeyframesWithDuration:0.6 delay:0.0 options:UIViewKeyframeAnimationOptionAutoreverse animations:^{
+    [UIView animateKeyframesWithDuration:0.5 delay:0.0 options:UIViewKeyframeAnimationOptionAutoreverse animations:^{
         
         
-        [UIView addKeyframeWithRelativeStartTime:0.0 relativeDuration:0.15 animations:^{
+        [UIView addKeyframeWithRelativeStartTime:0.1 relativeDuration:0.4 animations:^{
             groupCell.alpha = 0.0;
         }];
-        [UIView addKeyframeWithRelativeStartTime:0.15 relativeDuration:0.3 animations:^{
+        [UIView addKeyframeWithRelativeStartTime:0.5 relativeDuration:0.4 animations:^{
             groupCell.alpha = 1.0;
         }];
         
@@ -735,6 +713,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 //分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
 - (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath withSnapShotView:(UIView *)snapShotView{
     
+    //--todo--
     [self groupFailedCancelState:groupIndexPath];
     
     
@@ -748,6 +727,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 //分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
 - (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
+    
+    //--todo--
     [self groupFailedCancelState:groupIndexPath];
     
     
