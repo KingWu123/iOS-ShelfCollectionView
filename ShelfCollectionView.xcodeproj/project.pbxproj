@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		750F9E201D6D86CF001813D2 /* BookShelfView.m in Sources */ = {isa = PBXBuildFile; fileRef = 750F9E1F1D6D86CF001813D2 /* BookShelfView.m */; };
+		750F9E221D6D892C001813D2 /* BookShelfView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 750F9E211D6D892C001813D2 /* BookShelfView.xib */; };
 		7550AA0E1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 7550AA0D1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m */; };
 		756B9F9F1D658D4500279AD8 /* BookShelfGroupMainView.m in Sources */ = {isa = PBXBuildFile; fileRef = 756B9F9E1D658D4500279AD8 /* BookShelfGroupMainView.m */; };
 		756B9FA31D658DA200279AD8 /* BookShelfGroupMainView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 756B9FA21D658DA200279AD8 /* BookShelfGroupMainView.xib */; };
@@ -49,6 +50,7 @@
 /* Begin PBXFileReference section */
 		750F9E1E1D6D86CF001813D2 /* BookShelfView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookShelfView.h; sourceTree = "<group>"; };
 		750F9E1F1D6D86CF001813D2 /* BookShelfView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookShelfView.m; sourceTree = "<group>"; };
+		750F9E211D6D892C001813D2 /* BookShelfView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BookShelfView.xib; sourceTree = "<group>"; };
 		7550AA0C1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookshelfCollectionViewFlowLayout.h; sourceTree = "<group>"; };
 		7550AA0D1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookshelfCollectionViewFlowLayout.m; sourceTree = "<group>"; };
 		756B9F9D1D658D4500279AD8 /* BookShelfGroupMainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookShelfGroupMainView.h; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 			children = (
 				750F9E1E1D6D86CF001813D2 /* BookShelfView.h */,
 				750F9E1F1D6D86CF001813D2 /* BookShelfView.m */,
+				750F9E211D6D892C001813D2 /* BookShelfView.xib */,
 				7550AA0C1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.h */,
 				7550AA0D1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m */,
 				756B9F9D1D658D4500279AD8 /* BookShelfGroupMainView.h */,
@@ -306,6 +309,7 @@
 			files = (
 				75B3E9061D5D6209008280B8 /* LaunchScreen.storyboard in Resources */,
 				756F0C041D6C385300D1EA7C /* BookGroupCollectionViewCell.xib in Resources */,
+				750F9E221D6D892C001813D2 /* BookShelfView.xib in Resources */,
 				756B9FA31D658DA200279AD8 /* BookShelfGroupMainView.xib in Resources */,
 				75B3E9031D5D6209008280B8 /* Assets.xcassets in Resources */,
 				75B3E9011D5D6209008280B8 /* Main.storyboard in Resources */,

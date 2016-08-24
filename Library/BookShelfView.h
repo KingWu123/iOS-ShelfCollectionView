@@ -8,6 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
+
+
 @interface BookShelfView : UIView
 
++ (instancetype)loadFromNib;
+
+- (void)initWithData:(NSArray *)itemDatas;
 @end
