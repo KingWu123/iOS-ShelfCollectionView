@@ -785,9 +785,14 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             return;
         }
         
-        //如果处于正在进行分组前的状态流程，则取消这个分组流程
+        //如果处于正在进行分组前的状态流程，则直接进入分组流程
         if (self.groupState != BookShelfGroupReady && self.groupState != BookShelfGrouping){
+            BookShelfGroupState originState = self.groupState;
             [self groupFailedCancelState:self.groupingIndexPath];
+            
+            if (originState == BookShelfGroupBlink || originState == BookShelfGroupAttaching){
+//                [self beginGroupStageEnd:self.groupingIndexPath];
+            }
         }
     
         

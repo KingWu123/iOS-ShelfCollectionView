@@ -270,7 +270,7 @@
 				TargetAttributes = {
 					75B3E8F21D5D6209008280B8 = {
 						CreatedOnToolsVersion = 7.3.1;
-						DevelopmentTeam = ZGA3U8CTER;
+						DevelopmentTeam = XWV65WS8FZ;
 					};
 					75B3E90B1D5D6209008280B8 = {
 						CreatedOnToolsVersion = 7.3.1;
@@ -495,6 +495,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ShelfCollectionView/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.ShelfCollectionView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -509,6 +510,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = ShelfCollectionView/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.ShelfCollectionView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
