@@ -219,7 +219,14 @@
     
     //如果之前是分组，直接换array数据
     if (self.isGroupIndexOriginalIsGroup){
-        [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
+        //如果分组里还有数据
+        if ([groupItemData count] != 0){
+            [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
+        }else{
+            [self.modelSource removeObjectAtIndex:self.groupIndexPath.row];
+            [self.collectionView deleteItemsAtIndexPaths:@[self.groupIndexPath]];
+        }
+        
     }else{
         //如果分组前，被分组的item本身不是个分组，则取消退出来后，也要不是个分组
         [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:[groupItemData objectAtIndex:0]];

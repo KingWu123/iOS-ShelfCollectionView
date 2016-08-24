@@ -215,14 +215,14 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     
     if (newIndexPath != nil && ![newIndexPath isEqual:previousIndexPath]) {
-        self.selectedItemCurrentIndexPath = newIndexPath;
-        [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
-        
+       
         //交换数据
         if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
             [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
-            
         }
+        
+        self.selectedItemCurrentIndexPath = newIndexPath;
+        [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
         
         
     }else if (newIndexPath == nil){
@@ -241,14 +241,15 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             
             
             if (![self.selectedItemCurrentIndexPath isEqual:lastIndexPath]){
-                self.selectedItemCurrentIndexPath = lastIndexPath;
-                [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
                 
                 //交换数据
                 if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
                     [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
-                    
                 }
+                
+                self.selectedItemCurrentIndexPath = lastIndexPath;
+                [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
+
             }
         }
     }

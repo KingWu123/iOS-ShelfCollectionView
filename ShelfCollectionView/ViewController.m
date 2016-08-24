@@ -70,7 +70,7 @@
     
     
     BookShelfMainView *bookShelfView = [BookShelfMainView loadFromNib];
-    bookShelfView.frame = self.view.frame;
+    bookShelfView.frame = CGRectMake(0, 20, self.view.frame.size.width, self.view.frame.size.height - 20);
     [self.view addSubview:bookShelfView];
     self.bookShelfMainView = bookShelfView;
     
