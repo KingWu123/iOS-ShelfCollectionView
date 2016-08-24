@@ -11,6 +11,8 @@
 
 @interface BookCollectionViewCell : UICollectionViewCell
 
++ (instancetype)loadFromNib;
 
 - (void)initCellWithItemData:(ItemData *)itemData;
+
 @end

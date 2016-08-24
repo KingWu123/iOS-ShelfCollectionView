@@ -76,4 +76,7 @@
 //分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
 - (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath ;
 
+//分组界面是从 cell选中打开的。
+- (void)groupMainViewOpened;
+
 @end

@@ -28,6 +28,7 @@
 
 @property (weak, nonatomic)NSIndexPath *selectedIndexPath;
 @property (weak, nonatomic)NSIndexPath *groupIndexPath;
+@property (assign, nonatomic)BOOL isGroupIndexOriginalIsGroup;//被分组的item原先是不是分组item
 @property (weak, nonatomic)UIView *groupMainView;
 @end
 
@@ -63,8 +64,7 @@
 //        }
         
         CGSize itemSize = CGSizeMake(width, height);
-        ItemData *itemData = [[ItemData alloc]initWithTitle:[NSString stringWithFormat:@"book %d", i] itemSize:itemSize];
-        
+        ItemData *itemData = [[ItemData alloc]initWithTitle:[NSString stringWithFormat:@"L %d", i] itemSize:itemSize];
         
         
         if (i >= 10 && i<=13){
@@ -154,7 +154,44 @@
     return NO;
 }
 #pragma mark - UICollectionViewDelegate
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
+    id itemData = [self.modelSource objectAtIndex:indexPath.row];
+    
+    //是否是分组，如果是分组，打开分组
+    if ([self collectionView:collectionView isGroupedItemAtIndexPath:indexPath]){
+      
 
+        self.selectedIndexPath = nil;
+        self.groupIndexPath = indexPath;
+        
+        
+        BookShelfGroupMainView *groupMainView = [BookShelfGroupMainView loadFromNib];
+        self.isGroupIndexOriginalIsGroup = YES;
+        
+        [groupMainView initWithItemsData:itemData];
+        
+        groupMainView.delegate = self;
+        self.groupMainView  = groupMainView;
+        
+        //书架的手势传给分组界面
+        self.bookShelfFlowLayout.gestureDelegate = groupMainView;
+        [self.bookShelfFlowLayout groupMainViewOpened];
+        
+        
+        // 必须这么写， 因为手势都加载collectionView的superView上，collectionView 和 groupMainView需要共用一套手势
+        // 因此 groupMainView需要加在collectionView的superView上
+        [self.collectionView.superview addSubview:groupMainView];
+        groupMainView.frame = self.collectionView.superview.bounds;
+        [self openGroupMainView:groupMainView];
+
+        
+    }else{
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"打开一本书" message:nil preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
+        [alertController addAction:cancelAction];
+        [self presentViewController:alertController animated:YES completion:nil];
+    }
+}
 
 #pragma mark - UICollectionViewDelegateFlowLayout
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
@@ -196,12 +233,13 @@
     id groupData = [self.modelSource objectAtIndex:groupIndexPath.row];
     if (![groupData isKindOfClass:[NSArray class]]){
         groupData = @[groupData];
+        self.isGroupIndexOriginalIsGroup = NO;
+    }else{
+        self.isGroupIndexOriginalIsGroup = YES;
     }
+    
     [groupMainView initWithItemData:[self.modelSource objectAtIndex:itemIndexPath.row] groupedItemData:groupData snapView:snaptShotView];
 
-    
-    
-    
     groupMainView.delegate = self;
     self.groupMainView  = groupMainView;
     
@@ -226,17 +264,29 @@
     //分组界面接收书架界面手势的 回调 注销
     self.bookShelfFlowLayout.gestureDelegate = nil;
     
-    //取消分组，用户可能换了一个选中的item，退出来了，这里要处理一下
+    //取消分组，用户可能换了一个选中的item，退出来了，这里要处理一下.
     [self.modelSource replaceObjectAtIndex:self.selectedIndexPath.row withObject:itemData];
-    [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
+   
+    if (self.isGroupIndexOriginalIsGroup){
+        [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
+    }else{
+         //如果分组前，被分组的item本身不是个分组，则取消退出来后，也要不是个分组
+        [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:[groupItemData objectAtIndex:0]];
+    }
     
+    
+    //collectionView reload data
+    [self.collectionView reloadItemsAtIndexPaths:@[self.selectedIndexPath, self.groupIndexPath]];
 
 
     //告知书籍layout,进入分组界面，没有分组，就又退出来了
     [self.bookShelfFlowLayout cancelGroupForItemAtIndexPath:self.selectedIndexPath toGroupIndexPath:self.groupIndexPath withSnapShotView:snapShotView];
     
+    //关闭分组界面
     [self closeGroupMainView:self.groupMainView];
-    [self.collectionView reloadData];
+   
+    self.groupIndexPath = nil;
+    self.selectedIndexPath = nil;
 }
 
 //用户完成了分组操作
@@ -250,9 +300,15 @@
     
     //删除之前被分组的数据
     [self.modelSource removeObjectAtIndex:self.selectedIndexPath.row];
-    [self.collectionView deleteItemsAtIndexPaths:@[self.selectedIndexPath]];
+    
+    //collectionView reloadData
+    [self.collectionView performBatchUpdates:^{
+        [self.collectionView deleteItemsAtIndexPaths:@[self.selectedIndexPath]];
+        [self.collectionView reloadItemsAtIndexPaths: [self.collectionView indexPathsForVisibleItems]];
+    } completion:nil];
     
     
+    //上面的操作有可能 groupIndexPath变了，这里需要调一下
     if ([self.collectionView compareIndexPath:self.selectedIndexPath toIndexPath:self.groupIndexPath] < 0){
         self.groupIndexPath = [self.collectionView preIndexPathByCurrentIndexPath:self.groupIndexPath];
     }
@@ -263,7 +319,9 @@
     //移除分组界面
     [self closeGroupMainView:self.groupMainView];
 
-     [self.collectionView reloadData];
+   
+    self.selectedIndexPath = nil;
+    self.groupIndexPath = nil;
 }
 
 

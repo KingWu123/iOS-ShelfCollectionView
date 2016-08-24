@@ -15,6 +15,11 @@
 
 @implementation BookCollectionViewCell
 
+
++ (instancetype)loadFromNib{
+    return [[[NSBundle mainBundle]loadNibNamed:@"BookCollectionViewCell" owner:nil options:nil]objectAtIndex:0];
+}
+
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code

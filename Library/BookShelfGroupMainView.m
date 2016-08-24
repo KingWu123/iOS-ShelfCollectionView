@@ -49,7 +49,7 @@
     self.allGroupItems = [[NSMutableArray alloc]init];
 }
 
-
+//书架界面分组时的初始化方法
 - (void)initWithItemData:(ItemData *)itemData groupedItemData:(NSArray<ItemData *> *)groupedItemData snapView:(UIView *)snapView{
 
     [self.allGroupItems removeAllObjects];
@@ -60,6 +60,12 @@
     NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:self.allGroupItems.count - 1 inSection:0];
     
     [self.groupFlowLayout initSelectSnapShotViewIfNeeded:snapView selectedIndexPath:lastIndexPath];
+}
+
+//直接打开分组界面的初始化方法
+- (void)initWithItemsData:(NSArray<ItemData *> *)groupedItemData{
+    [self.allGroupItems removeAllObjects];
+    [self.allGroupItems addObjectsFromArray:groupedItemData];
 }
 
 - (void)dealloc{

@@ -29,7 +29,10 @@
 
 + (instancetype)loadFromNib;
 
+//书架界面分组时的初始化方法
 - (void)initWithItemData:(ItemData *)itemData groupedItemData:(NSArray<ItemData *> *)groupedItemData snapView:(UIView *)snapView;
 
+//直接打开分组界面的初始化方法
+- (void)initWithItemsData:(NSArray<ItemData *> *)groupedItemData;
 
 @end

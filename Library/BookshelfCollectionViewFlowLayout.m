@@ -331,7 +331,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         //竖直方向
         if ( self.scrollDirection == UICollectionViewScrollDirectionVertical){
             
-            
             //超过最后一个
             if (snapShotViewCenterInScorllView.y > self.collectionView.contentSize.height - self.selectedSnapShotView.frame.size.height && snapShotViewCenterInScorllView.x > CGRectGetMaxX(lastCell.frame)){
                
@@ -364,15 +363,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                     }
                 }
             }
-//            //屏幕的最右边
-//            else if (snapShotViewCenterInScorllView.x > self.collectionView.contentSize.width){
-//                
-//            }
-//            //屏幕的最左边
-//            else if (snapShotViewCenterInScorllView.x < 0){
-//                
-//            }
-            
         }
         
         //水平方向 --todo--
@@ -478,7 +468,19 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginGroupForItemAtIndexPath:toGroupIndexPath:selectedSnapShotView:)]){
         [self.delegate collectionView:self.collectionView layout:self beginGroupForItemAtIndexPath:self.selectedItemCurrentIndexPath toGroupIndexPath:groupIndexPath selectedSnapShotView:self.selectedSnapShotView];
     }
+    
+    //为分组包装的view此时消失掉
+   [self viewOfGroupedItemBackToOriginView:groupIndexPath];
 }
+
+//分组界面是从 cell选中打开的。
+- (void)groupMainViewOpened{
+    
+    self.groupState = BookShelfGrouping;
+    [self invalidatesScrollTimer];
+}
+
+
 
 //分组失败的 状态清空处理
 - (void)groupFailedCancelState:(NSIndexPath *)groupIndextPath{
@@ -501,7 +503,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         }
         case BookShelfGrouping: {
             //--todo--
-            [self cancelBeginGroupStageTwo:groupIndextPath];
+            //[self cancelBeginGroupStageTwo:groupIndextPath];
             break;
         }
     }
@@ -657,12 +659,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 #pragma mark - 分组界面打开后，回到书架界面
 
+
 //分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
 - (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath withSnapShotView:(UIView *)snapShotView{
     
     //--todo--
-    [self groupFailedCancelState:groupIndexPath];
-    
+    //[self groupFailedCancelState:groupIndexPath];
+    self.groupState = BookShelfGroupReady;
     
     self.selectedSnapShotView = snapShotView;
     self.snapShotViewScrollingCenter = snapShotView.center;
@@ -676,8 +679,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 - (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
     
     //--todo--
-    [self groupFailedCancelState:groupIndexPath];
-
+    //[self groupFailedCancelState:groupIndexPath];
+    self.groupState = BookShelfGroupReady;
     
     [self.selectedSnapShotView removeFromSuperview];
     self.selectedSnapShotView = nil;

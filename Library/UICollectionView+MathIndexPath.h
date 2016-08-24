@@ -19,6 +19,8 @@
  */
 - (NSIndexPath *)nextIndexPathByCurrentIndexPath:(NSIndexPath *)currentIndexPath;
 
+
+
 /**
  *  获得collectionView  currentIndexPath的上一个indexPath
  *
