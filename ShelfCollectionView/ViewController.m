@@ -9,13 +9,13 @@
 #import "ViewController.h"
 
 #import "ItemData.h"
-#import "BookShelfView.h"
+#import "BookShelfMainView.h"
 
 
 @interface ViewController ()
 
 @property (nonatomic, strong)NSMutableArray *modelSource;
-@property (weak, nonatomic)BookShelfView *bookShelfView;
+@property (weak, nonatomic)BookShelfMainView *bookShelfMainView;
 @end
 
 
@@ -69,10 +69,10 @@
     }
     
     
-    BookShelfView *bookShelfView = [BookShelfView loadFromNib];
+    BookShelfMainView *bookShelfView = [BookShelfMainView loadFromNib];
     bookShelfView.frame = self.view.frame;
     [self.view addSubview:bookShelfView];
-    self.bookShelfView = bookShelfView;
+    self.bookShelfMainView = bookShelfView;
     
     [bookShelfView initWithData:self.modelSource];
 }

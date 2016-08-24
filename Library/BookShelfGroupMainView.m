@@ -32,8 +32,6 @@
     return [[[NSBundle mainBundle]loadNibNamed:@"BookShelfGroupMainView" owner:nil options:nil] objectAtIndex:0];
 }
 
-
-
 - (void)awakeFromNib{
     [self.collectionView registerNib:[UINib nibWithNibName:@"BookCollectionViewCell" bundle:nil] forCellWithReuseIdentifier:@"BookCollectionViewCell"];
 
@@ -90,13 +88,13 @@
     return cell;
 }
 
-
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath*)destinationIndexPath{
     
     id sourceObject = [self.allGroupItems objectAtIndex:sourceIndexPath.row];
     [self.allGroupItems removeObjectAtIndex:sourceIndexPath.row];
     [self.allGroupItems insertObject:sourceObject atIndex:destinationIndexPath.row];
 }
+
 
 #pragma mark - UICollectionViewDelegateFlowLayout
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
@@ -111,9 +109,11 @@
 - (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout minimumLineSpacingForSectionAtIndex:(NSInteger)section{
     return 0;
 }
+
 - (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout minimumInteritemSpacingForSectionAtIndex:(NSInteger)section{
     return 0;
 }
+
 
 #pragma mark - BookShelfGroupViewDelegateFlowLayout
 //begin movement
@@ -126,7 +126,6 @@
     
 }
 
-
 //当拖动的item不再collectionView范围内时，取消分组
 - (void)cancelGroupSelectedItemAtIndexPath:(NSIndexPath *)itemIndexPath withSnapShotView:(UIView *)snapShotView{
     
@@ -134,12 +133,12 @@
     [self cancelGroupWithItemData:itemData withSnapShotView:snapShotView];
 }
 
+
 #pragma mark - gesture
 - (void)handleExitTapGesture:(UITapGestureRecognizer *)recognizer{
     
     [self finishedGroup];
 }
-
 
 
 //进行分组时，分组界面需要利用书架界面传过来的手势进行处理。
@@ -150,14 +149,10 @@
     [self.groupFlowLayout handleLongPressGesture:gestureRecognizer];
 }
 
-
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gestureRecognizer inGestureView:(UIView *)view{
     
     [self.groupFlowLayout handlePanGesture:gestureRecognizer];
 }
-
-
-
 
 
 #pragma mark - exit group view

@@ -1,5 +1,5 @@
 //
-//  BookShelfView.h
+//  BookShelfMainView.h
 //  ShelfCollectionView
 //
 //  Created by king.wu on 8/24/16.
@@ -9,8 +9,10 @@
 #import <UIKit/UIKit.h>
 
 
-
-@interface BookShelfView : UIView
+/**
+ *  书架主界面
+ */
+@interface BookShelfMainView : UIView
 
 + (instancetype)loadFromNib;
 

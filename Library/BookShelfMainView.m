@@ -1,12 +1,12 @@
 //
-//  BookShelfView.m
+//  BookShelfMainView.m
 //  ShelfCollectionView
 //
 //  Created by king.wu on 8/24/16.
 //  Copyright © 2016 king.wu. All rights reserved.
 //
 
-#import "BookShelfView.h"
+#import "BookShelfMainView.h"
 
 #import "BookCollectionViewCell.h"
 #import "BookGroupCollectionViewCell.h"
@@ -17,7 +17,7 @@
 #import "UICollectionView+MathIndexPath.h"
 
 
-@interface BookShelfView ()<BookShelfCollectionViewDelegateFlowLayout, BookShelfCollectionViewDataSource,BookShelfGroupMainViewDelegate>
+@interface BookShelfMainView ()<BookShelfCollectionViewDelegateFlowLayout, BookShelfCollectionViewDataSource,BookShelfGroupMainViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (nonatomic, strong)NSMutableArray *modelSource;
@@ -31,10 +31,10 @@
 
 @end
 
-@implementation BookShelfView
+@implementation BookShelfMainView
 
 + (instancetype)loadFromNib{
-    return [[[NSBundle mainBundle]loadNibNamed:@"BookShelfView" owner:nil options:nil] objectAtIndex:0];
+    return [[[NSBundle mainBundle]loadNibNamed:@"BookShelfMainView" owner:nil options:nil] objectAtIndex:0];
 }
 
 - (void)awakeFromNib{
@@ -48,7 +48,7 @@
 }
 
 - (void)initWithData:(NSArray *)itemDatas{
-    self.modelSource = itemDatas;
+    self.modelSource = [[NSMutableArray alloc]initWithArray:itemDatas];
 }
 
 - (UICollectionViewLayout *)createLayout{
@@ -60,26 +60,21 @@
 }
 
 
-
-
 #pragma mark - UICollectionViewDataSource
-
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
     return [self.modelSource count];;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
-    // NSLog(@"new indexPath = %@",indexPath );
     id itemData = [self.modelSource objectAtIndex:indexPath.row];
-    
+
     if ([itemData isKindOfClass:[ItemData class]]){
         
         BookCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"BookCollectionViewCell" forIndexPath:indexPath];
-        
-        // NSLog(@"title = %@", [(ItemData *)itemData title]);
         [cell initCellWithItemData:itemData];
         return cell;
+        
     }else {
         BookGroupCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"BookGroupCollectionViewCell" forIndexPath:indexPath];
         [cell initCellWithDatas:itemData];
@@ -87,9 +82,7 @@
     }
 }
 
-
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView{
-    
     return 1;
 }
 
@@ -100,7 +93,6 @@
     [self.modelSource insertObject:sourceObject atIndex:destinationIndexPath.row];
 }
 
-
 - (BOOL)collectionView:(UICollectionView *)collectionView isGroupedItemAtIndexPath:(NSIndexPath *)indexPath{
     id itemData = [self.modelSource objectAtIndex:indexPath.row];
     if ([itemData isKindOfClass:[NSArray class]]){
@@ -108,6 +100,8 @@
     }
     return NO;
 }
+
+
 #pragma mark - UICollectionViewDelegate
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
     id itemData = [self.modelSource objectAtIndex:indexPath.row];
@@ -115,16 +109,13 @@
     //是否是分组，如果是分组，打开分组
     if ([self collectionView:collectionView isGroupedItemAtIndexPath:indexPath]){
         
-        
         self.selectedIndexPath = nil;
         self.groupIndexPath = indexPath;
-        
         
         BookShelfGroupMainView *groupMainView = [BookShelfGroupMainView loadFromNib];
         self.isGroupIndexOriginalIsGroup = YES;
         
         [groupMainView initWithItemsData:itemData];
-        
         groupMainView.delegate = self;
         self.groupMainView  = groupMainView;
         
@@ -132,23 +123,23 @@
         self.bookShelfFlowLayout.gestureDelegate = groupMainView;
         [self.bookShelfFlowLayout groupMainViewClickedOpened];
         
-        
         // 必须这么写， 因为手势都加载collectionView的superView上，collectionView 和 groupMainView需要共用一套手势
         // 因此 groupMainView需要加在collectionView的superView上
         [self.collectionView.superview addSubview:groupMainView];
         groupMainView.frame = self.collectionView.superview.bounds;
         [self openGroupMainView:groupMainView];
         
-        
     }else{
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"打开一本书" message:nil preferredStyle:UIAlertControllerStyleAlert];
         UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
         [alertController addAction:cancelAction];
-        //[self presentViewController:alertController animated:YES completion:nil];
+        [self.window.rootViewController presentViewController:alertController animated:YES completion:nil];
     }
 }
 
+
 #pragma mark - UICollectionViewDelegateFlowLayout
+
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
     
     id itemData = [self.modelSource objectAtIndex:indexPath.row];
@@ -159,9 +150,7 @@
         float width = [[UIScreen mainScreen]bounds].size.width /3;
         float height = width + 50;
         return  CGSizeMake(width, height);
-        
     }
-    
 }
 
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section{
@@ -174,8 +163,6 @@
 - (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout minimumInteritemSpacingForSectionAtIndex:(NSInteger)section{
     return 0;
 }
-
-
 
 //did begin group  itemIndexPath to the groupIndexPath
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath selectedSnapShotView:(UIView *)snaptShotView{
@@ -201,7 +188,6 @@
     //书架的手势传给分组界面
     self.bookShelfFlowLayout.gestureDelegate = groupMainView;
     
-    
     // 必须这么写， 因为手势都加载collectionView的superView上，collectionView 和 groupMainView需要共用一套手势
     // 因此 groupMainView需要加在collectionView的superView上
     [self.collectionView.superview insertSubview:groupMainView belowSubview:snaptShotView];
@@ -210,15 +196,12 @@
 }
 
 
-
 #pragma mark - BookShelfGroupMainViewDelegate
 //用户取消了分组操作
 - (void)cancelGroupInGroupViewWithItemData:(ItemData *)itemData withGroupData:(NSArray<ItemData *> *)groupItemData withSnapShotView:(UIView *)snapShotView{
     
-    
     //分组界面接收书架界面手势的 回调 注销
     self.bookShelfFlowLayout.gestureDelegate = nil;
-    
     
     //self.selectedIndexPath ==nil,表示从cell click打开，此时拖动一个item从分组界面出来，没有位置可以插入这个，在groupIndex前面插入一个位置，放拖出来的item
     if (self.selectedIndexPath == nil){
@@ -234,7 +217,7 @@
     }
     
     
-    
+    //如果之前是分组，直接换array数据
     if (self.isGroupIndexOriginalIsGroup){
         [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
     }else{
@@ -262,7 +245,6 @@
     //分组界面接收书架界面手势的 回调 注销
     self.bookShelfFlowLayout.gestureDelegate = nil;
     
-    
     //合并分组的数据
     [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
     
@@ -277,8 +259,6 @@
             [self.collectionView reloadItemsAtIndexPaths: [self.collectionView indexPathsForVisibleItems]];
         } completion:nil];
     }
-    
-    
     
     
     //上面的操作有可能 groupIndexPath变了，这里需要调一下
@@ -298,6 +278,8 @@
 }
 
 
+#pragma mark - assist method
+//打开分组界面
 - (void)openGroupMainView:(UIView *)groupMainView{
     
     groupMainView.alpha = 0.0;
@@ -308,6 +290,7 @@
     }];
 }
 
+//关闭分组界面
 - (void)closeGroupMainView:(UIView *)groupMainView{
     groupMainView.alpha = 1.0;
     [UIView animateWithDuration:0.3 delay:0.0 options:(UIViewAnimationOptionCurveLinear) animations:^{
@@ -318,9 +301,5 @@
         self.groupMainView = nil;
     }];
 }
-
-
-
-
 
 @end

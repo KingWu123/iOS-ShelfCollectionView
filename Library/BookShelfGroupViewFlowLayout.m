@@ -70,9 +70,6 @@ static NSString * const kBSScrollingDirectionKey = @"ShelfBookScrollingDirection
 static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 
-
-
-
 #pragma mark - BookShelfGroupViewFlowLayout
 
 /**
@@ -136,7 +133,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.scrollingTriggerEdgeInsets = _scrollingTriggerEdgeInsets = UIEdgeInsetsMake(5.0f, 5.0f, 5.0f, 5.0f);
 }
 
-
 - (id<BookShelfGroupViewDataSource>)dataSource {
     return (id<BookShelfGroupViewDataSource>)self.collectionView.dataSource;
 }
@@ -144,7 +140,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 - (id<BookShelfGroupViewDelegateFlowLayout>)delegate {
     return (id<BookShelfGroupViewDelegateFlowLayout>)self.collectionView.delegate;
 }
-
 
 //进入分组界面时， 手势是从底下的书架界面传上来的，因此不会从longPress手势对选中的item进行snapView的初始化，需要自己初始化
 - (void)initSelectSnapShotViewIfNeeded:(UIView *)snapShotView selectedIndexPath:(NSIndexPath *)selectedIndexPath{
@@ -182,7 +177,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }
 }
 
-
 - (void)invalidatesScrollTimer {
     if (!self.displayLink.paused) {
         [self.displayLink invalidate];
@@ -208,8 +202,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
     
 }
-
-
 
 //判断选中的item是否要换到新的位置或进行分组
 - (void)ajustItemIndexpathIfNecessary {
@@ -263,7 +255,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
 }
 
-
 //判断位置是否在分组的item frame 范围内
 - (BOOL)checkPostion:(CGPoint )postion inGroupIndexItemFrame:(CGRect)itemframe{
     if( postion.x > itemframe.origin.x + itemframe.size.width * 0.3
@@ -277,9 +268,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 
-
 #pragma mark - gesture
-
 - (void)handleLongPressGesture:(UILongPressGestureRecognizer *)recognizer{
     
     if (self.selectedSnapShotViewParentView == nil){
@@ -375,7 +364,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }
 }
 
-
 - (void)handlePanGesture:(UIPanGestureRecognizer *)gestureRecognizer{
     if (self.selectedSnapShotViewParentView == nil){
         self.selectedSnapShotViewParentView = self.collectionView.window.rootViewController.view;
@@ -460,7 +448,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         } break;
     }
 }
-
 
 - (void)handleScroll:(CADisplayLink *)displayLink{
     
@@ -566,8 +553,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }
 }
 
-#pragma mark - UICollectionViewLayout overridden methods
 
+#pragma mark - UICollectionViewLayout overridden methods
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect {
     
     NSArray *layoutAttributes = [super layoutAttributesForElementsInRect:rect];
@@ -606,7 +593,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     return layoutAttributes;
 }
 
-
 //使每个item的frame 上对齐
 - (NSArray *)alignTopLayoutAttributesForElements:(NSArray *)originAttributes;
 {
@@ -632,7 +618,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     return attrs;
 }
 
-
 - (void)alignToTopForSameLineElements:(NSArray *)sameLineElements
 {
     if (sameLineElements.count == 0) {
@@ -650,6 +635,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }];
 }
 
+
 #pragma mark - postion
 //collectionview的view的坐标 转换到屏幕上的坐标
 - (CGPoint)convertScrollPositionToScreenPostion:(CGPoint)scrollPostion  inScrollView:(UIScrollView *)scrollView inScreenView:(UIView *)screenView {
@@ -663,6 +649,5 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     return [screenView convertPoint:screenPostion toView:scrollView];
 }
-
 
 @end
