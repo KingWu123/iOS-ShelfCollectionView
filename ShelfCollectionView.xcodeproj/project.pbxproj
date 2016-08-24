@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		750F9E201D6D86CF001813D2 /* BookShelfView.m in Sources */ = {isa = PBXBuildFile; fileRef = 750F9E1F1D6D86CF001813D2 /* BookShelfView.m */; };
 		7550AA0E1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 7550AA0D1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m */; };
 		756B9F9F1D658D4500279AD8 /* BookShelfGroupMainView.m in Sources */ = {isa = PBXBuildFile; fileRef = 756B9F9E1D658D4500279AD8 /* BookShelfGroupMainView.m */; };
 		756B9FA31D658DA200279AD8 /* BookShelfGroupMainView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 756B9FA21D658DA200279AD8 /* BookShelfGroupMainView.xib */; };
@@ -46,6 +47,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		750F9E1E1D6D86CF001813D2 /* BookShelfView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookShelfView.h; sourceTree = "<group>"; };
+		750F9E1F1D6D86CF001813D2 /* BookShelfView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookShelfView.m; sourceTree = "<group>"; };
 		7550AA0C1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookshelfCollectionViewFlowLayout.h; sourceTree = "<group>"; };
 		7550AA0D1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookshelfCollectionViewFlowLayout.m; sourceTree = "<group>"; };
 		756B9F9D1D658D4500279AD8 /* BookShelfGroupMainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookShelfGroupMainView.h; sourceTree = "<group>"; };
@@ -110,6 +113,8 @@
 		7550AA0B1D62F50C001FEFB0 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				750F9E1E1D6D86CF001813D2 /* BookShelfView.h */,
+				750F9E1F1D6D86CF001813D2 /* BookShelfView.m */,
 				7550AA0C1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.h */,
 				7550AA0D1D62F742001FEFB0 /* BookshelfCollectionViewFlowLayout.m */,
 				756B9F9D1D658D4500279AD8 /* BookShelfGroupMainView.h */,
@@ -331,6 +336,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				756B9FA61D658FA100279AD8 /* ItemData.m in Sources */,
+				750F9E201D6D86CF001813D2 /* BookShelfView.m in Sources */,
 				75B3E8FE1D5D6209008280B8 /* ViewController.m in Sources */,
 				756B9F9F1D658D4500279AD8 /* BookShelfGroupMainView.m in Sources */,
 				75B3E9381D5D6F7D008280B8 /* BookCollectionViewCell.m in Sources */,

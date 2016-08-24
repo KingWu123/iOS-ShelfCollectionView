@@ -117,12 +117,14 @@
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
+   // NSLog(@"new indexPath = %@",indexPath );
     id itemData = [self.modelSource objectAtIndex:indexPath.row];
     
     if ([itemData isKindOfClass:[ItemData class]]){
     
         BookCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"BookCollectionViewCell" forIndexPath:indexPath];
     
+       // NSLog(@"title = %@", [(ItemData *)itemData title]);
         [cell initCellWithItemData:itemData];
         return cell;
     }else {

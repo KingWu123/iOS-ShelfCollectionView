@@ -13,7 +13,7 @@
             <subviews>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0yk-R1-3X9">
                     <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                    <color key="backgroundColor" red="0.1215686275" green="0.12941176469999999" blue="0.14117647059999999" alpha="1" colorSpace="calibratedRGB"/>
+                    <color key="backgroundColor" red="0.46837137029999998" green="0.66666666669999997" blue="0.54446377599999995" alpha="1" colorSpace="calibratedRGB"/>
                 </view>
                 <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="分组" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="IXm-nR-GUr">
                     <rect key="frame" x="197" y="49" width="207" height="30"/>
@@ -25,7 +25,7 @@
                     <textInputTraits key="textInputTraits"/>
                 </textField>
                 <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="bxz-LH-Yki">
-                    <rect key="frame" x="0.0" y="131" width="600" height="284"/>
+                    <rect key="frame" x="0.0" y="120" width="600" height="360"/>
                     <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="TAE-h9-Cfl">
                         <size key="itemSize" width="50" height="50"/>
                         <size key="headerReferenceSize" width="0.0" height="0.0"/>
@@ -34,12 +34,12 @@
                     </collectionViewFlowLayout>
                 </collectionView>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qeT-Lg-9fp">
-                    <rect key="frame" x="0.0" y="415" width="600" height="185"/>
+                    <rect key="frame" x="0.0" y="480" width="600" height="120"/>
                     <subviews>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="点击退出" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TYJ-gv-OZw">
-                            <rect key="frame" x="266" y="82" width="68" height="21"/>
+                            <rect key="frame" x="266" y="50" width="68" height="21"/>
                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                            <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             <nil key="highlightedColor"/>
                         </label>
                     </subviews>
@@ -55,7 +55,7 @@
                 <constraint firstItem="qeT-Lg-9fp" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="0m4-Qe-k3H"/>
                 <constraint firstItem="IXm-nR-GUr" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="2gL-ir-v4X"/>
                 <constraint firstItem="bxz-LH-Yki" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="393-cT-bhC"/>
-                <constraint firstItem="bxz-LH-Yki" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="131" id="5Ki-7N-4mP"/>
+                <constraint firstItem="bxz-LH-Yki" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="120" id="5Ki-7N-4mP"/>
                 <constraint firstAttribute="trailing" secondItem="0yk-R1-3X9" secondAttribute="trailing" id="8Dh-Eb-KbN"/>
                 <constraint firstItem="qeT-Lg-9fp" firstAttribute="top" secondItem="bxz-LH-Yki" secondAttribute="bottom" id="AeG-dY-h4P"/>
                 <constraint firstItem="0yk-R1-3X9" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="DqP-id-jxl"/>
@@ -63,7 +63,7 @@
                 <constraint firstAttribute="bottom" secondItem="qeT-Lg-9fp" secondAttribute="bottom" id="Gqo-pL-Wnj"/>
                 <constraint firstAttribute="bottom" secondItem="0yk-R1-3X9" secondAttribute="bottom" id="Ybu-mq-qXX"/>
                 <constraint firstAttribute="trailing" secondItem="qeT-Lg-9fp" secondAttribute="trailing" id="boo-i5-Xwk"/>
-                <constraint firstAttribute="bottom" secondItem="bxz-LH-Yki" secondAttribute="bottom" constant="185" id="cex-qP-vc8"/>
+                <constraint firstAttribute="bottom" secondItem="bxz-LH-Yki" secondAttribute="bottom" constant="120" id="cex-qP-vc8"/>
                 <constraint firstAttribute="trailing" secondItem="bxz-LH-Yki" secondAttribute="trailing" id="gLU-CV-j2X"/>
                 <constraint firstItem="IXm-nR-GUr" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="49" id="o4y-K5-OzF"/>
             </constraints>
@@ -73,7 +73,7 @@
                 <outlet property="groupTitleTextFiled" destination="IXm-nR-GUr" id="yVJ-Np-mCZ"/>
                 <outlet property="tabExitView" destination="qeT-Lg-9fp" id="Hlt-9j-TU5"/>
             </connections>
-            <point key="canvasLocation" x="282.5" y="265.5"/>
+            <point key="canvasLocation" x="282" y="265"/>
         </view>
     </objects>
 </document>

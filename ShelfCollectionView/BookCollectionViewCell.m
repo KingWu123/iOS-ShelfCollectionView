@@ -30,7 +30,7 @@
 }
 
 - (void)prepareForReuse{
-    [self.numberIndexLabel setText:nil];
+    [self.numberIndexLabel setText:@""];
 }
 
 @end

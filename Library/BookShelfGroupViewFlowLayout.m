@@ -98,7 +98,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 @property (assign, nonatomic, readonly) id<BookShelfGroupViewDataSource> dataSource;
 @property (assign, nonatomic, readonly) id<BookShelfGroupViewDelegateFlowLayout> delegate;
 
-
+@property (assign, nonatomic)BOOL isCanExit;//标记是否可以退出
 
 @end
 
@@ -130,6 +130,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 - (void)initCommon{
 
+    self.isCanExit = YES;
+    
     self.scrollingSpeed = 200.f;
     self.scrollingTriggerEdgeInsets = _scrollingTriggerEdgeInsets = UIEdgeInsetsMake(5.0f, 5.0f, 5.0f, 5.0f);
 }
@@ -163,6 +165,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             if (strongSelf) {
             }
         }];
+    
+    
+    //如果一进来，snapshotView的位置就处于collectionView的外部， 则标记一下，不要退出，当进入CollectionView，在移动出来时，才退出
+    if ([self isOutSideScrollViewFrame]){
+        self.isCanExit = NO;
+    }
+    
 }
     
     
@@ -384,6 +393,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         case UIGestureRecognizerStateBegan:
         case UIGestureRecognizerStateChanged: {
             
+            if (!self.isCanExit && [self isInScrollViewFrame]){
+                self.isCanExit = YES;
+            }
             //如果在在scrollView之外，则退出
             if ([self checkOutSideofCollectionViewToExit]){
                 return;
@@ -391,6 +403,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             
             //pan translation
              self.snapShotViewPanTranslation = [gestureRecognizer translationInView:self.selectedSnapShotViewParentView];
+            
+            CGPoint velocity =[gestureRecognizer velocityInView:self.selectedSnapShotViewParentView];
+
             
             //update snapshotView center
             CGPoint viewCenter = self.selectedSnapShotView.center = BG_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
@@ -405,11 +420,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                     CGFloat topExceedY = (viewCenter.y - hegiht/2) - (CGRectGetMinY(self.collectionView.frame) - self.scrollingTriggerEdgeInsets.top);
                     CGFloat bottomExceedtY = (viewCenter.y + hegiht/2) - (CGRectGetMaxY(self.collectionView.frame) + self.scrollingTriggerEdgeInsets.bottom);
                     
-                    if (topExceedY < 0) {
+                    if (topExceedY < 0 && velocity.y < 0) {
                         [self caculateScrollSpeed:topExceedY];
                         [self setupScrollTimerInDirection:BookGroupScrollingDirectionUp];
                         
-                    } else if (bottomExceedtY > 0) {
+                    } else if (bottomExceedtY > 0 && velocity.y > 0) {
                         [self caculateScrollSpeed:bottomExceedtY];
                         [self setupScrollTimerInDirection:BookGroupScrollingDirectionDown];
                         
@@ -422,11 +437,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                     CGFloat leftExceedX = (viewCenter.x - width/2) - (CGRectGetMinX(self.collectionView.frame) - self.scrollingTriggerEdgeInsets.left);
                     CGFloat rightExceedX = viewCenter.x + width/2 -  (CGRectGetMaxX(self.collectionView.frame) + self.scrollingTriggerEdgeInsets.right);
                     
-                    if (leftExceedX < 0) {
+                    if (leftExceedX < 0 && velocity.x < 0) {
                         [self caculateScrollSpeed:leftExceedX];
                         [self setupScrollTimerInDirection:BookGroupScrollingDirectionLeft];
                         
-                    } else if (rightExceedX > 0) {
+                    } else if (rightExceedX > 0 && velocity.x > 0) {
                         [self caculateScrollSpeed:rightExceedX];
                         [self setupScrollTimerInDirection:BookGroupScrollingDirectionRight];
                         
@@ -446,22 +461,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     }
 }
 
-
-//如果在在scrollView之外，则退出
-- (BOOL)checkOutSideofCollectionViewToExit{
-    
-    CGPoint positionInScreenView = [self.panGestureRecognizer locationInView:self.selectedSnapShotViewParentView];
-    if (positionInScreenView.y > CGRectGetMaxY(self.collectionView.frame)){
-        if ([self.delegate respondsToSelector:@selector(cancelGroupSelectedItemAtIndexPath:withSnapShotView:)]){
-            [self.delegate cancelGroupSelectedItemAtIndexPath:self.selectedItemCurrentIndexPath withSnapShotView:self.selectedSnapShotView];
-        }
-        [self invalidatesScrollTimer];
-        return YES;
-    }else{
-        return NO;
-    }
-
-}
 
 - (void)handleScroll:(CADisplayLink *)displayLink{
     
@@ -534,6 +533,38 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.scrollingSpeed = ABS(exceedDistance) * 5 + 200;
 }
 
+//如果在在scrollView之外，则退出
+- (BOOL)checkOutSideofCollectionViewToExit{
+    
+    
+    if ([self isOutSideScrollViewFrame] && self.isCanExit){
+        if ([self.delegate respondsToSelector:@selector(cancelGroupSelectedItemAtIndexPath:withSnapShotView:)]){
+            [self.delegate cancelGroupSelectedItemAtIndexPath:self.selectedItemCurrentIndexPath withSnapShotView:self.selectedSnapShotView];
+        }
+        [self invalidatesScrollTimer];
+        return YES;
+    }else{
+        return NO;
+    }
+}
+
+- (BOOL)isOutSideScrollViewFrame{
+    
+    if (self.selectedSnapShotView.center.y > CGRectGetMaxY(self.collectionView.frame)){
+        return YES;
+    }else{
+        return NO;
+    }
+}
+
+- (BOOL)isInScrollViewFrame{
+    if (self.selectedSnapShotView.center.y < CGRectGetMaxY(self.collectionView.frame)
+        && self.selectedSnapShotView.center.y > CGRectGetMinY(self.collectionView.frame)){
+        return YES;
+    }else{
+        return NO;
+    }
+}
 
 #pragma mark - UICollectionViewLayout overridden methods
 

@@ -307,16 +307,14 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     if (newIndexPath != nil && ![newIndexPath isEqual:previousIndexPath]) {
         
-        self.selectedItemCurrentIndexPath = newIndexPath;
-        [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
-        
-        
-        //交换数据
+        //交换数据, 数据的交换要先执行
         if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
             [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
             
         }
-
+        
+        self.selectedItemCurrentIndexPath = newIndexPath;
+        [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
         
     }else if (newIndexPath == nil){
         
@@ -338,14 +336,15 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                
                 if (![self.selectedItemCurrentIndexPath isEqual:lastIndexPath]){
                    
-                    self.selectedItemCurrentIndexPath = lastIndexPath;
-                    [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
-                    
                     //交换数据
                     if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
                         [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:lastIndexPath];
                         
                     }
+                    
+                    self.selectedItemCurrentIndexPath = lastIndexPath;
+                    [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
+            
                 }
             }
             //超出第一个
@@ -354,15 +353,15 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                 
                 if (![self.selectedItemCurrentIndexPath isEqual:firstIndexPath]){
                     
-                    self.selectedItemCurrentIndexPath = firstIndexPath;
-                    [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:firstIndexPath];
-                    
-                    
                     //交换数据
                     if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:moveItemAtIndexPath:toIndexPath:)]){
                         [self.dataSource collectionView:self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:firstIndexPath];
                         
                     }
+
+                    
+                    self.selectedItemCurrentIndexPath = firstIndexPath;
+                    [self.collectionView moveItemAtIndexPath:previousIndexPath toIndexPath:newIndexPath];
                 }
             }
         }
@@ -881,6 +880,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             [self caculateGestureMoveDirection:panTranslation];
             self.snapShotViewPanTranslation = panTranslation;
             
+            CGPoint velocity =[gestureRecognizer velocityInView:self.selectedSnapShotViewParentView];
+            
             //update snapshotView center
             CGPoint viewCenter = self.selectedSnapShotView.center = BS_CGPointAdd(self.snapShotViewScrollingCenter, self.snapShotViewPanTranslation);
         
@@ -894,11 +895,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                     CGFloat topExceedY = (viewCenter.y - hegiht/2) - (CGRectGetMinY(self.collectionView.frame) - self.scrollingTriggerEdgeInsets.top);
                     CGFloat bottomExceedtY = (viewCenter.y + hegiht/2) - (CGRectGetMaxY(self.collectionView.frame) + self.scrollingTriggerEdgeInsets.bottom);
                     
-                    if (topExceedY < 0) {
+                    if (topExceedY < 0 && velocity.y < 0) {
                         [self caculateScrollSpeed:topExceedY];
                         [self setupScrollTimerInDirection:BookShelfScrollingDirectionUp];
                         
-                    } else if (bottomExceedtY > 0) {
+                    } else if (bottomExceedtY > 0 && velocity.y > 0) {
                         [self caculateScrollSpeed:bottomExceedtY];
                         [self setupScrollTimerInDirection:BookShelfScrollingDirectionDown];
                         
@@ -911,11 +912,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
                     CGFloat leftExceedX = (viewCenter.x - width/2) - (CGRectGetMinX(self.collectionView.frame) - self.scrollingTriggerEdgeInsets.left);
                     CGFloat rightExceedX = viewCenter.x + width/2 -  (CGRectGetMaxX(self.collectionView.frame) + self.scrollingTriggerEdgeInsets.right);
                     
-                    if (leftExceedX < 0) {
+                    if (leftExceedX < 0 && velocity.x < 0) {
                         [self caculateScrollSpeed:leftExceedX];
                         [self setupScrollTimerInDirection:BookShelfScrollingDirectionLeft];
                         
-                    } else if (rightExceedX > 0) {
+                    } else if (rightExceedX > 0 && velocity.x > 0) {
                         [self caculateScrollSpeed:rightExceedX];
                         [self setupScrollTimerInDirection:BookShelfScrollingDirectionRight];
                         
