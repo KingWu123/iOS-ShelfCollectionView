@@ -175,7 +175,7 @@
         
         //书架的手势传给分组界面
         self.bookShelfFlowLayout.gestureDelegate = groupMainView;
-        [self.bookShelfFlowLayout groupMainViewOpened];
+        [self.bookShelfFlowLayout groupMainViewClickedOpened];
         
         
         // 必须这么写， 因为手势都加载collectionView的superView上，collectionView 和 groupMainView需要共用一套手势
@@ -264,9 +264,22 @@
     //分组界面接收书架界面手势的 回调 注销
     self.bookShelfFlowLayout.gestureDelegate = nil;
     
-    //取消分组，用户可能换了一个选中的item，退出来了，这里要处理一下.
-    [self.modelSource replaceObjectAtIndex:self.selectedIndexPath.row withObject:itemData];
-   
+    
+    //self.selectedIndexPath ==nil,表示从cell click打开，此时拖动一个item从分组界面出来，没有位置可以插入这个，在groupIndex前面插入一个位置，放拖出来的item
+    if (self.selectedIndexPath == nil){
+        [self.modelSource insertObject:itemData atIndex:self.groupIndexPath.row];
+        [self.collectionView insertItemsAtIndexPaths:@[self.groupIndexPath]];
+        
+        self.selectedIndexPath = self.groupIndexPath;
+        self.groupIndexPath = [self.collectionView nextIndexPathByCurrentIndexPath:self.selectedIndexPath];
+    }else{
+        
+        //取消分组，用户可能换了一个选中的item，退出来了，这里要处理一下.
+        [self.modelSource replaceObjectAtIndex:self.selectedIndexPath.row withObject:itemData];
+    }
+
+    
+    
     if (self.isGroupIndexOriginalIsGroup){
         [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
     }else{
@@ -298,14 +311,19 @@
     //合并分组的数据
     [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
     
-    //删除之前被分组的数据
-    [self.modelSource removeObjectAtIndex:self.selectedIndexPath.row];
+    //self.selectedIndexPath != nil表示是进行分组时，进入分组界面，==nil,表示从cell click打开
+    if (self.selectedIndexPath != nil){
+        //删除之前被分组的数据
+        [self.modelSource removeObjectAtIndex:self.selectedIndexPath.row];
+        
+        //collectionView reloadData
+        [self.collectionView performBatchUpdates:^{
+            [self.collectionView deleteItemsAtIndexPaths:@[self.selectedIndexPath]];
+            [self.collectionView reloadItemsAtIndexPaths: [self.collectionView indexPathsForVisibleItems]];
+        } completion:nil];
+    }
     
-    //collectionView reloadData
-    [self.collectionView performBatchUpdates:^{
-        [self.collectionView deleteItemsAtIndexPaths:@[self.selectedIndexPath]];
-        [self.collectionView reloadItemsAtIndexPaths: [self.collectionView indexPathsForVisibleItems]];
-    } completion:nil];
+   
     
     
     //上面的操作有可能 groupIndexPath变了，这里需要调一下

@@ -122,6 +122,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 @property (strong, nonatomic) NSTimer *groupConditionWillBeginTimer;//满足将要进入分组状态的定时器
 @property (assign, nonatomic)BookShelfGroupState groupState; //分组处于的状态
 @property (weak, nonatomic)NSIndexPath *groupingIndexPath;
+@property (assign, nonatomic)BOOL isGroupMainViewClickedOpened;//分组界面是否直接点击cell打开
 
 @end
 
@@ -165,6 +166,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.gestureMoveDirection = BookShelfGestureMoveDirectionUnknown;
     
     self.groupState = BookShelfGroupReady;
+    self.isGroupMainViewClickedOpened = NO;
 
     _reorderEnabled = YES;
     _groupEnabled = NO;
@@ -474,8 +476,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 //分组界面是从 cell选中打开的。
-- (void)groupMainViewOpened{
-    
+- (void)groupMainViewClickedOpened{
+   
+    self.isGroupMainViewClickedOpened = YES;
     self.groupState = BookShelfGrouping;
     [self invalidatesScrollTimer];
 }
@@ -663,8 +666,13 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 //分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
 - (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath withSnapShotView:(UIView *)snapShotView{
     
+    self.isGroupMainViewClickedOpened = NO;
+    if (!self.selectedItemCurrentIndexPath){
+        self.selectedItemCurrentIndexPath = itemIndexPath;
+    }
     //--todo--
     //[self groupFailedCancelState:groupIndexPath];
+    
     self.groupState = BookShelfGroupReady;
     
     self.selectedSnapShotView = snapShotView;
@@ -678,6 +686,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 //分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
 - (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
     
+    self.isGroupMainViewClickedOpened = NO;
     //--todo--
     //[self groupFailedCancelState:groupIndexPath];
     self.groupState = BookShelfGroupReady;
@@ -1133,7 +1142,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     if ([self.panGestureRecognizer isEqual:gestureRecognizer]) {
        
-        return (self.selectedItemCurrentIndexPath != nil);
+        return (self.selectedItemCurrentIndexPath != nil || self.isGroupMainViewClickedOpened);
     }
     return YES;
 }

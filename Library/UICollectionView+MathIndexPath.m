@@ -69,6 +69,11 @@
  *  @return indexPath > toIndexPath 返回1， 相等返回0， 小于返回-1
  */
 - (int)compareIndexPath:(NSIndexPath *)indexPath toIndexPath:(NSIndexPath *)toIndexPath{
+   
+    if (indexPath == nil || toIndexPath ==nil){
+        return 0;
+    }
+    
     if (toIndexPath.section > indexPath.section || (toIndexPath.section == indexPath.section && toIndexPath.row > indexPath.row)){
         return -1;
     }else if (toIndexPath.section == indexPath.section && toIndexPath.row == indexPath.row){

@@ -77,6 +77,6 @@
 - (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath ;
 
 //分组界面是从 cell选中打开的。
-- (void)groupMainViewOpened;
+- (void)groupMainViewClickedOpened;
 
 @end

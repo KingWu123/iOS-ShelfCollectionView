@@ -379,21 +379,15 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         return;
     }
     
-    //如果在在scrollView之外，则退出
-    CGPoint positionInScreenView = [self.panGestureRecognizer locationInView:self.selectedSnapShotViewParentView];
-    if (positionInScreenView.y > CGRectGetMaxY(self.collectionView.frame)){
-        if ([self.delegate respondsToSelector:@selector(cancelGroupSelectedItemAtIndexPath:withSnapShotView:)]){
-            [self.delegate cancelGroupSelectedItemAtIndexPath:self.selectedItemCurrentIndexPath withSnapShotView:self.selectedSnapShotView];
-        }
-        [self invalidatesScrollTimer];
-        return;
-    }
-    
-    
     
     switch (gestureRecognizer.state) {
         case UIGestureRecognizerStateBegan:
         case UIGestureRecognizerStateChanged: {
+            
+            //如果在在scrollView之外，则退出
+            if ([self checkOutSideofCollectionViewToExit]){
+                return;
+            }
             
             //pan translation
              self.snapShotViewPanTranslation = [gestureRecognizer translationInView:self.selectedSnapShotViewParentView];
@@ -450,6 +444,23 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         default: {
         } break;
     }
+}
+
+
+//如果在在scrollView之外，则退出
+- (BOOL)checkOutSideofCollectionViewToExit{
+    
+    CGPoint positionInScreenView = [self.panGestureRecognizer locationInView:self.selectedSnapShotViewParentView];
+    if (positionInScreenView.y > CGRectGetMaxY(self.collectionView.frame)){
+        if ([self.delegate respondsToSelector:@selector(cancelGroupSelectedItemAtIndexPath:withSnapShotView:)]){
+            [self.delegate cancelGroupSelectedItemAtIndexPath:self.selectedItemCurrentIndexPath withSnapShotView:self.selectedSnapShotView];
+        }
+        [self invalidatesScrollTimer];
+        return YES;
+    }else{
+        return NO;
+    }
+
 }
 
 - (void)handleScroll:(CADisplayLink *)displayLink{
