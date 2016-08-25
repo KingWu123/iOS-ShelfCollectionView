@@ -14,17 +14,17 @@
                 <rect key="frame" x="0.0" y="0.0" width="125" height="140"/>
                 <subviews>
                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fGs-qT-5f5">
-                        <rect key="frame" x="0.0" y="0.0" width="125" height="140"/>
+                        <rect key="frame" x="3" y="3" width="119" height="134"/>
                         <color key="backgroundColor" red="0.81695679530201337" green="0.86853496468046976" blue="0.51034282481483229" alpha="1" colorSpace="calibratedRGB"/>
                     </view>
                 </subviews>
                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
             </view>
             <constraints>
-                <constraint firstItem="fGs-qT-5f5" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="3Zr-bi-Mpg"/>
-                <constraint firstItem="fGs-qT-5f5" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="OVL-8s-0Vu"/>
-                <constraint firstAttribute="trailing" secondItem="fGs-qT-5f5" secondAttribute="trailing" id="e6w-kL-Sl6"/>
-                <constraint firstAttribute="bottom" secondItem="fGs-qT-5f5" secondAttribute="bottom" id="rUa-67-dUI"/>
+                <constraint firstItem="fGs-qT-5f5" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" constant="3" id="3Zr-bi-Mpg"/>
+                <constraint firstItem="fGs-qT-5f5" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" constant="3" id="OVL-8s-0Vu"/>
+                <constraint firstAttribute="trailing" secondItem="fGs-qT-5f5" secondAttribute="trailing" constant="3" id="e6w-kL-Sl6"/>
+                <constraint firstAttribute="bottom" secondItem="fGs-qT-5f5" secondAttribute="bottom" constant="3" id="rUa-67-dUI"/>
             </constraints>
             <connections>
                 <outlet property="groupView" destination="fGs-qT-5f5" id="YQq-AO-zYh"/>

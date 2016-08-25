@@ -17,6 +17,7 @@
 //item是否是 分过组的item
 - (BOOL)collectionView:(UICollectionView *)collectionView isGroupedItemAtIndexPath:(NSIndexPath *)indexPath;
 
+
 @end
 
 
@@ -32,6 +33,13 @@
 
 //begin group, itemIndexPath to groupIndexPath
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath selectedSnapShotView:(UIView *)snaptShotView;
+
+//add itemIndexPath to groupIndexPath mmediately, add open groupMainView.
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout addItemAtIndexPath:(NSIndexPath *)itemIndexPath andOpenGroupAtIndexPath:(NSIndexPath *)groupIndexPath;
+
+
+//add itemIndexPath to groupIndexPath mmediately, and not open groupMainView.
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout addItemAtIndexPath:(NSIndexPath *)itemIndexPath unOpenGroupAtIndexPath:(NSIndexPath *)groupIndexPath;
 @end
 
 

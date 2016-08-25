@@ -108,26 +108,7 @@
     
     //是否是分组，如果是分组，打开分组
     if ([self collectionView:collectionView isGroupedItemAtIndexPath:indexPath]){
-        
-        self.selectedIndexPath = nil;
-        self.groupIndexPath = indexPath;
-        
-        BookShelfGroupMainView *groupMainView = [BookShelfGroupMainView loadFromNib];
-        self.isGroupIndexOriginalIsGroup = YES;
-        
-        [groupMainView initWithItemsData:itemData];
-        groupMainView.delegate = self;
-        self.groupMainView  = groupMainView;
-        
-        //书架的手势传给分组界面
-        self.bookShelfFlowLayout.gestureDelegate = groupMainView;
-        [self.bookShelfFlowLayout groupMainViewClickedOpened];
-        
-        // 必须这么写， 因为手势都加载collectionView的superView上，collectionView 和 groupMainView需要共用一套手势
-        // 因此 groupMainView需要加在collectionView的superView上
-        [self.collectionView.superview addSubview:groupMainView];
-        groupMainView.frame = self.collectionView.superview.bounds;
-        [self openGroupMainView:groupMainView];
+        [self clickToOpenGrouMainViewAtIndexPath:indexPath withData:itemData];
         
     }else{
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"打开一本书" message:nil preferredStyle:UIAlertControllerStyleAlert];
@@ -137,6 +118,30 @@
     }
 }
 
+//点击cell打开分组
+- (void)clickToOpenGrouMainViewAtIndexPath:(NSIndexPath *)indexPath withData:(NSArray *)itemDatas{
+    
+    self.selectedIndexPath = nil;
+    self.groupIndexPath = indexPath;
+    
+    BookShelfGroupMainView *groupMainView = [BookShelfGroupMainView loadFromNib];
+    self.isGroupIndexOriginalIsGroup = YES;
+    
+    [groupMainView initWithItemsData:itemDatas];
+    groupMainView.delegate = self;
+    self.groupMainView  = groupMainView;
+    
+    //书架的手势传给分组界面
+    self.bookShelfFlowLayout.gestureDelegate = groupMainView;
+    [self.bookShelfFlowLayout groupMainViewClickedOpened];
+    
+    // 必须这么写， 因为手势都加载collectionView的superView上，collectionView 和 groupMainView需要共用一套手势
+    // 因此 groupMainView需要加在collectionView的superView上
+    [self.collectionView.superview addSubview:groupMainView];
+    groupMainView.frame = self.collectionView.superview.bounds;
+    [self openGroupMainView:groupMainView];
+
+}
 
 #pragma mark - UICollectionViewDelegateFlowLayout
 
@@ -164,7 +169,7 @@
     return 0;
 }
 
-//did begin group  itemIndexPath to the groupIndexPath
+//did begin group  itemIndexPath to the groupIndexPath, with snapShotView
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath selectedSnapShotView:(UIView *)snaptShotView{
     
     self.selectedIndexPath = itemIndexPath;
@@ -194,6 +199,60 @@
     groupMainView.frame = self.collectionView.superview.bounds;
     [self openGroupMainView:groupMainView];
 }
+
+
+//add itemIndexPath to groupIndexPath mmediately, add open groupMainView.
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout addItemAtIndexPath:(NSIndexPath *)itemIndexPath andOpenGroupAtIndexPath:(NSIndexPath *)groupIndexPath{
+    
+    id itemData = [self.modelSource objectAtIndex:itemIndexPath.row];
+    id groupData = [self.modelSource objectAtIndex:groupIndexPath.row];
+    
+    
+    //删除这个item数据 和 cell
+    [self.modelSource removeObject:itemData];
+    [self.collectionView deleteItemsAtIndexPaths:@[itemIndexPath]];
+    
+    //groupindex是否前移
+    if ([self.collectionView compareIndexPath:itemIndexPath toIndexPath:groupIndexPath] < 0){
+        groupIndexPath = [self.collectionView preIndexPathByCurrentIndexPath:groupIndexPath];
+    }
+    
+    //打开分组
+    [self clickToOpenGrouMainViewAtIndexPath:groupIndexPath withData:@[groupData, itemData]];
+    self.isGroupIndexOriginalIsGroup = NO;
+}
+
+
+//add itemIndexPath to groupIndexPath mmediately, and not open groupMainView.
+- (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout addItemAtIndexPath:(NSIndexPath *)itemIndexPath unOpenGroupAtIndexPath:(NSIndexPath *)groupIndexPath{
+    
+    id groupData = [self.modelSource objectAtIndex:groupIndexPath.row];
+    id itemData = [self.modelSource objectAtIndex:itemIndexPath.row];
+    
+    if(![groupData isKindOfClass:[NSArray class]]){
+        return;
+    }
+    
+    //将数据添加到group中
+    NSMutableArray *tempGroupArr = [[NSMutableArray alloc]initWithArray:groupData];
+    [tempGroupArr addObject:itemData];
+    [self.modelSource replaceObjectAtIndex:groupIndexPath.row withObject:tempGroupArr];
+
+    //删除这个item数据
+    [self.modelSource removeObject:itemData];
+   
+    //更新分组item和 groupItem
+    [self.collectionView performBatchUpdates:^{
+        [self.collectionView deleteItemsAtIndexPaths:@[itemIndexPath]];
+        [self.collectionView reloadItemsAtIndexPaths:@[groupIndexPath]];
+    } completion:nil];
+    
+    
+    //告知书籍layout,分组完成
+    [self.bookShelfFlowLayout finishedGroupForItemAtIndexPath:self.selectedIndexPath toGroupIndexPath:self.groupIndexPath];
+
+}
+
 
 
 #pragma mark - BookShelfGroupMainViewDelegate
@@ -228,10 +287,9 @@
         }
         
     }else{
-        //如果分组前，被分组的item本身不是个分组，则取消退出来后，也要不是个分组
+        //如果分组前， groupitem本身不是个分组，则取消退出来后，也要不是个分组
         [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:[groupItemData objectAtIndex:0]];
     }
-    
     
     //collectionView reload data
     [self.collectionView reloadItemsAtIndexPaths:@[self.selectedIndexPath, self.groupIndexPath]];
@@ -263,10 +321,11 @@
         //collectionView reloadData
         [self.collectionView performBatchUpdates:^{
             [self.collectionView deleteItemsAtIndexPaths:@[self.selectedIndexPath]];
-            [self.collectionView reloadItemsAtIndexPaths: [self.collectionView indexPathsForVisibleItems]];
+            [self.collectionView reloadItemsAtIndexPaths: @[self.groupIndexPath]];
         } completion:nil];
+    }else{
+        [self.collectionView reloadItemsAtIndexPaths: @[self.groupIndexPath]];
     }
-    
     
     //上面的操作有可能 groupIndexPath变了，这里需要调一下
     if ([self.collectionView compareIndexPath:self.selectedIndexPath toIndexPath:self.groupIndexPath] < 0){

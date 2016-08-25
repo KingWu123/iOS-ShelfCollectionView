@@ -119,6 +119,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 @property (strong, nonatomic) NSTimer *groupConditionWillBeginTimer;//满足将要进入分组状态的定时器
 @property (assign, nonatomic)BookShelfGroupState groupState; //分组处于的状态
+@property (assign, nonatomic)BOOL isGestureEndWatingGroup;//手势结束是否在等待进入分组界面
 @property (weak, nonatomic)NSIndexPath *groupingIndexPath;
 @property (assign, nonatomic)BOOL isGroupMainViewClickedOpened;//分组界面是否直接点击cell打开
 
@@ -161,6 +162,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 - (void)initCommon{
+    self.isGestureEndWatingGroup = NO;
     self.gestureMoveDirection = BookShelfGestureMoveDirectionUnknown;
     
     self.groupState = BookShelfGroupReady;
@@ -226,7 +228,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 - (void)ajustItemIndexpathIfNecessary {
 
     //如果正在进行分组，则不再进行其他处理
-    if (self.groupState == BookShelfGrouping){
+    if (self.groupState == BookShelfGrouping || self.isGestureEndWatingGroup){
         return;
     }
     
@@ -496,8 +498,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             break;
         }
         case BookShelfGrouping: {
-            //--todo--
-            //[self cancelBeginGroupStageTwo:groupIndextPath];
             break;
         }
     }
@@ -572,7 +572,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         
     } completion:^(BOOL finished) {
         if (finished){
-            [self beginGroupStageEnd:groupIndexPath];
+            if (self.isGestureEndWatingGroup){
+                [self gestureEndAutoGoingGroup];
+            }else{
+                [self beginGroupStageEnd:groupIndexPath];
+            }
         }
         
     }];
@@ -636,6 +640,40 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     UICollectionViewCell *groupCell = [self.collectionView cellForItemAtIndexPath:indexPath];
     UIView *groupView = [groupCell viewWithTag:13333];
     [groupView removeFromSuperview];
+}
+
+
+#pragma mark - 手指松开，分组处于attach和blink状态, 自动进行分组处理
+- (void)gestureEndAutoGoingGroup{
+    
+    self.isGestureEndWatingGroup = NO;
+    self.groupState = BookShelfGrouping;
+    [self invalidatesScrollTimer];
+    [self viewOfGroupedItemBackToOriginView:self.groupingIndexPath];
+    
+    BOOL isGroupingIndexPathAlreadyGrouped = NO;
+    if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:isGroupedItemAtIndexPath:)]){
+        isGroupingIndexPathAlreadyGrouped = [self.dataSource collectionView:self.collectionView isGroupedItemAtIndexPath:self.groupingIndexPath];
+    }
+    
+    [self.selectedSnapShotView removeFromSuperview];
+    self.selectedSnapShotView = nil;
+    
+    
+    //如果将要进行分组的indexPath 已经是分组了，则不用打开分组界面，直接进行分组
+    if (isGroupingIndexPathAlreadyGrouped){
+        //告知不用打开分组，直接加入到分组即可
+        if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:addItemAtIndexPath:unOpenGroupAtIndexPath:)]){
+            [self.delegate collectionView:self.collectionView layout:self addItemAtIndexPath:self.selectedItemCurrentIndexPath unOpenGroupAtIndexPath:self.groupingIndexPath];
+        }
+        
+    }else{
+        
+        //告知打开分组
+        if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:addItemAtIndexPath:andOpenGroupAtIndexPath:)]){
+            [self.delegate collectionView:self.collectionView layout:self addItemAtIndexPath:self.selectedItemCurrentIndexPath andOpenGroupAtIndexPath:self.groupingIndexPath];
+        }
+    }
 }
 
 
@@ -732,7 +770,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         [self.gestureDelegate handleLongPressGesture:recognizer inGestureView:self.collectionView];
     }
     
-    if(self.groupState == BookShelfGrouping){
+    if(self.groupState == BookShelfGrouping || self.isGestureEndWatingGroup){
         return;
     }
     
@@ -785,14 +823,14 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             return;
         }
         
-        //如果处于正在进行分组前的状态流程，则直接进入分组流程
-        if (self.groupState != BookShelfGroupReady && self.groupState != BookShelfGrouping){
-            BookShelfGroupState originState = self.groupState;
-            [self groupFailedCancelState:self.groupingIndexPath];
+        //如果分组状态处于 blink和attach状态，此时手指松开，则进入 自动进入分组流程处理
+        if (self.groupState == BookShelfGroupBlink || self.groupState == BookShelfGroupAttaching){
             
-            if (originState == BookShelfGroupBlink || originState == BookShelfGroupAttaching){
-//                [self beginGroupStageEnd:self.groupingIndexPath];
-            }
+            self.isGestureEndWatingGroup = YES;
+            return;
+        }else if (self.groupState == BookShelfGroupBegin){
+            //清除分组状态
+            [self groupFailedCancelState:self.groupingIndexPath];
         }
     
         
@@ -839,7 +877,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     if (self.gestureDelegate != nil && [self.gestureDelegate respondsToSelector:@selector(handlePanGesture:inGestureView:)]){
         [self.gestureDelegate handlePanGesture:gestureRecognizer inGestureView:self.collectionView];
     }
-    if (self.groupState == BookShelfGrouping){
+    if (self.groupState == BookShelfGrouping || self.isGestureEndWatingGroup){
         return;
     }
     if (self.selectedSnapShotView == nil){
