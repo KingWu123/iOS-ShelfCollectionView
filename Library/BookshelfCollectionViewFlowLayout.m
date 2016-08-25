@@ -683,9 +683,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     self.groupState = BookShelfGroupReady;
     self.isGroupMainViewClickedOpened = NO;
-    if (!self.selectedItemCurrentIndexPath){
-        self.selectedItemCurrentIndexPath = itemIndexPath;
-    }
+  
+    self.selectedItemCurrentIndexPath = itemIndexPath;
+  
     
     self.selectedSnapShotView = snapShotView;
     self.snapShotViewScrollingCenter = snapShotView.center;
