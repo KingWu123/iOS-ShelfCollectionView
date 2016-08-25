@@ -85,17 +85,17 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 @property (nonatomic, assign) CGFloat scrollingSpeed;//拖动item时滑动的速度
 @property (nonatomic, assign) UIEdgeInsets scrollingTriggerEdgeInsets;//触发滑动的范围
-@property (strong, nonatomic) CADisplayLink *displayLink;
+@property (nonatomic, strong) CADisplayLink *displayLink;
 
 
-@property (strong, nonatomic) UILongPressGestureRecognizer *longPressGestureRecognizer;
-@property (strong, nonatomic) UIPanGestureRecognizer *panGestureRecognizer;
+@property (nonatomic, strong) UILongPressGestureRecognizer *longPressGestureRecognizer;
+@property (nonatomic, strong) UIPanGestureRecognizer *panGestureRecognizer;
 
 
-@property (assign, nonatomic, readonly) id<BookShelfGroupViewDataSource> dataSource;
-@property (assign, nonatomic, readonly) id<BookShelfGroupViewDelegateFlowLayout> delegate;
+@property (nonatomic, assign, readonly) id<BookShelfGroupViewDataSource> dataSource;
+@property (nonatomic, assign, readonly) id<BookShelfGroupViewDelegateFlowLayout> delegate;
 
-@property (assign, nonatomic)BOOL isCanExit;//标记是否可以退出
+@property (nonatomic, assign)BOOL isCanExit;//标记是否可以退出
 
 @end
 

@@ -104,24 +104,21 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 @property (nonatomic, assign) CGFloat scrollingSpeed;//拖动item时滑动的速度
 @property (nonatomic, assign) UIEdgeInsets scrollingTriggerEdgeInsets;//触发滑动的范围
-@property (strong, nonatomic) CADisplayLink *displayLink;
+@property (nonatomic, strong) CADisplayLink *displayLink;
 
-@property (strong, nonatomic) UILongPressGestureRecognizer *longPressGestureRecognizer;
-@property (strong, nonatomic) UIPanGestureRecognizer *panGestureRecognizer;
+@property (nonatomic, strong, nonatomic) UILongPressGestureRecognizer *longPressGestureRecognizer;
+@property (nonatomic, strong, nonatomic) UIPanGestureRecognizer *panGestureRecognizer;
 
-@property (assign, nonatomic) BookShelfGestureMoveDirection gestureMoveDirection;//手势移动的方向
+@property (nonatomic, assign) BookShelfGestureMoveDirection gestureMoveDirection;//手势移动的方向
 
+@property (nonatomic, assign, readonly) id<BookShelfCollectionViewDataSource> dataSource;
+@property (nonatomic, assign, readonly) id<BookShelfCollectionViewDelegateFlowLayout> delegate;
 
-@property (assign, nonatomic, readonly) id<BookShelfCollectionViewDataSource> dataSource;
-@property (assign, nonatomic, readonly) id<BookShelfCollectionViewDelegateFlowLayout> delegate;
-
-
-
-@property (strong, nonatomic) NSTimer *groupConditionWillBeginTimer;//满足将要进入分组状态的定时器
-@property (assign, nonatomic)BookShelfGroupState groupState; //分组处于的状态
-@property (assign, nonatomic)BOOL isGestureEndWatingGroup;//手势结束是否在等待进入分组界面
-@property (weak, nonatomic)NSIndexPath *groupingIndexPath;
-@property (assign, nonatomic)BOOL isGroupMainViewClickedOpened;//分组界面是否直接点击cell打开
+@property (nonatomic, strong) NSTimer *groupConditionWillBeginTimer;//满足将要进入分组状态的定时器
+@property (nonatomic, strong)NSIndexPath *groupingIndexPath;
+@property (nonatomic, assign)BookShelfGroupState groupState; //分组处于的状态
+@property (nonatomic, assign)BOOL isGestureEndWatingGroup;//手势结束是否在等待进入分组界面
+@property (nonatomic, assign)BOOL isGroupMainViewClickedOpened;//分组界面是否直接点击cell打开
 
 @end
 

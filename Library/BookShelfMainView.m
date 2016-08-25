@@ -20,14 +20,15 @@
 @interface BookShelfMainView ()<BookShelfCollectionViewDelegateFlowLayout, BookShelfCollectionViewDataSource,BookShelfGroupMainViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
-@property (nonatomic, strong)NSMutableArray *modelSource;
-
-@property (weak, nonatomic)BookshelfCollectionViewFlowLayout *bookShelfFlowLayout;
-
-@property (weak, nonatomic)NSIndexPath *selectedIndexPath;
-@property (weak, nonatomic)NSIndexPath *groupIndexPath;
-@property (assign, nonatomic)BOOL isGroupIndexOriginalIsGroup;//被分组的item原先是不是分组item
 @property (weak, nonatomic)UIView *groupMainView;
+
+@property (nonatomic, weak)BookshelfCollectionViewFlowLayout *bookShelfFlowLayout;
+
+@property (nonatomic, strong)NSMutableArray *modelSource;
+@property (nonatomic, strong, )NSIndexPath *selectedIndexPath;
+@property (nonatomic, strong)NSIndexPath *groupIndexPath;
+@property (nonatomic, assign)BOOL isGroupIndexOriginalIsGroup;//被分组的item原先是不是分组item
+
 
 @end
 

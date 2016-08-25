@@ -19,8 +19,8 @@
 
 @property (weak, nonatomic) IBOutlet UIView *tabExitView;
 
-@property (strong, nonatomic)BookShelfGroupViewFlowLayout *groupFlowLayout;
-@property (strong, nonatomic)NSMutableArray<ItemData *> * allGroupItems;
+@property (nonatomic, strong)BookShelfGroupViewFlowLayout *groupFlowLayout;
+@property (nonatomic, strong)NSMutableArray<ItemData *> * allGroupItems;
 
 
 @end
