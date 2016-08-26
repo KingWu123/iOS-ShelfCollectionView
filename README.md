@@ -1,7 +1,8 @@
 # ShelfCollectionView
  用collectionView，实现一个书架功能， 能够对书架上的书籍进行拖动重排、分组等操作。
   
- 这个功能类似于iphone手机界面对 应用程序图标 进行拖动重排、分组。
+ <font color=#ff0000>这个功能类似于iphone手机界面对 "应用程序图标" 进行拖动重排、分组。</font>
+ 
 
 Class BookShelfMainView: 书架界面
 
