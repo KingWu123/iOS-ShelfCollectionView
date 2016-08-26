@@ -647,9 +647,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     //如果将要进行分组的indexPath 已经是分组了，则不用打开分组界面，直接进行分组
     if (isGroupingIndexPathAlreadyGrouped){
-        
-        [self viewOfGroupedItemBackToOriginView:self.groupingIndexPath];
-        
+    
         //告知不用打开分组，直接加入到分组即可
         if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:addItemAtIndexPath:unOpenGroupAtIndexPath:)]){
             [self.delegate collectionView:self.collectionView layout:self addItemAtIndexPath:self.selectedItemCurrentIndexPath unOpenGroupAtIndexPath:self.groupingIndexPath];
@@ -682,11 +680,12 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     self.isGroupMainViewOpened = YES;
 
-    
     self.selectedItemCurrentIndexPath  = nil;
     self.snapShotViewScrollingCenter = CGPointZero;
     self.snapShotViewPanTranslation = CGPointZero;
     
+    
+    [self viewOfGroupedItemBackToOriginView:self.groupingIndexPath];
     [self invalidateLayout];
 }
 
@@ -705,7 +704,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     [self.panGestureRecognizer setTranslation:CGPointZero inView:self.selectedSnapShotViewParentView];
     
     [self invalidateLayout];
-    
+
     self.groupingIndexPath = nil;
 }
 
@@ -721,8 +720,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.selectedItemCurrentIndexPath  = nil;
     self.snapShotViewScrollingCenter = CGPointZero;
     self.snapShotViewPanTranslation = CGPointZero;
-    
-    [self viewOfGroupedItemBackToOriginView:groupIndexPath];
     
     [self invalidateLayout];
     

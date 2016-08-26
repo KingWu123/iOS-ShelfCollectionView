@@ -169,7 +169,6 @@
 //打开分组界面，此时手势没有松开，还可以继续移动选中的书籍
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath selectedSnapShotView:(UIView *)snaptShotView{
     
-    
     NSMutableArray *tempGroupData = nil;
     
     id groupData = [self.modelSource objectAtIndex:groupIndexPath.row];
@@ -202,7 +201,6 @@
             self.groupIndexPath = [self.collectionView preIndexPathByCurrentIndexPath:groupIndexPath];
         }
 
-        
     }];
     
     
@@ -289,36 +287,42 @@
 
     //分组取消回来，item没有位置可以放，在groupIndex前放一个itemIndex
     [self.modelSource insertObject:itemData atIndex:self.groupIndexPath.row];
-    [self.collectionView insertItemsAtIndexPaths:@[self.groupIndexPath]];
-        
+    
     NSIndexPath *selectedIndexPath  = self.groupIndexPath;
     self.groupIndexPath = [self.collectionView nextIndexPathByCurrentIndexPath:selectedIndexPath];
-
- 
+    
     //如果之前是分组，直接换array数据
     if (self.isGroupIndexOriginalIsGroup){
-        //如果分组里还有数据
-        if ([groupItemData count] != 0){
-            [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
-        }else{
-            [self.modelSource removeObjectAtIndex:self.groupIndexPath.row];
-            [self.collectionView deleteItemsAtIndexPaths:@[self.groupIndexPath]];
-        }
-        
+        [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
+
     }else{
         //如果分组前， groupitem本身不是个分组，则取消退出来后，也要不是个分组
         [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:[groupItemData objectAtIndex:0]];
     }
     
-    //collectionView reload data
-    [self.collectionView reloadItemsAtIndexPaths:@[selectedIndexPath, self.groupIndexPath]];
+   
+
+    //调整cell
+    [self.collectionView performBatchUpdates:^{
+
+        //如果没有了，把这一项删除掉
+        if ([groupItemData isKindOfClass:[NSArray class]] && [groupItemData count] == 0){
+            [self.modelSource removeObjectAtIndex:self.groupIndexPath.row];
+            [self.collectionView deleteItemsAtIndexPaths:@[selectedIndexPath]];
+        }else{
+            [self.collectionView reloadItemsAtIndexPaths:@[selectedIndexPath]];
+        }
+        
+        
+        [self.collectionView insertItemsAtIndexPaths:@[selectedIndexPath]];
+    } completion:nil];
     
     
     //告知书籍layout,进入分组界面，没有分组，就又退出来了
     [self.bookShelfFlowLayout cancelGroupForItemAtIndexPath:selectedIndexPath toGroupIndexPath:self.groupIndexPath withSnapShotView:snapShotView];
     
     //关闭分组界面
-    [self closeGroupMainView:self.groupMainView];
+    [self closeGroupMainView:self.groupMainView completion:nil];
     
     self.groupIndexPath = nil;
 }
@@ -335,7 +339,7 @@
     [self.bookShelfFlowLayout finishedGroupForItemAtGroupIndexPath:self.groupIndexPath];
     
     //移除分组界面
-    [self closeGroupMainView:self.groupMainView];
+    [self closeGroupMainView:self.groupMainView completion:nil];
     
     self.groupIndexPath = nil;
 }
@@ -377,7 +381,7 @@
 
 
 //关闭分组界面
-- (void)closeGroupMainView:(UIView *)groupMainView{
+- (void)closeGroupMainView:(UIView *)groupMainView completion:(void (^ __nullable)(BOOL finished))completion{
     
     self.groupMainView.delegate = nil;
     
@@ -391,6 +395,10 @@
         //移除分组界面
         [self.groupMainView removeFromSuperview];
         self.groupMainView = nil;
+        
+        if (completion != nil){
+            completion(finished);
+        }
     }];
 }
 
