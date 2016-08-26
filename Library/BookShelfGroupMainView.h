@@ -40,4 +40,6 @@
  */
 - (void)initWithItemsData:(NSArray<ItemData *> *)groupedItemData snapView:(UIView *)snapView;
 
+//分组界面完全打开了（分组界面打开有个动画过程）
+- (void)didOpened;
 @end

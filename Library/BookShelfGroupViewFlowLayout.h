@@ -48,4 +48,6 @@
 //进入分组界面时， 手势是从底下的书架界面传上来的，因此不会从longPress手势对选中的item进行snapView的初始化，需要自己初始化
 - (void)initSelectSnapShotViewIfNeeded:(UIView *)snapShotView selectedIndexPath:(NSIndexPath *)selectedIndexPath;
 
+//设置可以退出，默认是不能退出的
+- (void)setCanExit;
 @end

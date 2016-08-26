@@ -372,6 +372,8 @@
     [UIView animateWithDuration:0.3 delay:0.0 options:(UIViewAnimationOptionCurveLinear) animations:^{
         groupMainView.alpha = 1.0;
     } completion:^(BOOL finished) {
+        
+        [self.groupMainView didOpened];
         if (completion != nil){
             completion(finished);
         }

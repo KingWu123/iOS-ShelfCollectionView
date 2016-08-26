@@ -67,6 +67,13 @@
     }
 }
 
+//分组界面完全打开了（分组界面打开有个动画过程）
+- (void)didOpened{
+
+    [self.groupFlowLayout setCanExit];
+}
+
+
 - (void)dealloc{
     self.collectionView.dataSource = nil;
     self.collectionView.delegate = nil;

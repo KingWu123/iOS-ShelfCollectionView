@@ -95,7 +95,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 @property (nonatomic, assign, readonly) id<BookShelfGroupViewDataSource> dataSource;
 @property (nonatomic, assign, readonly) id<BookShelfGroupViewDelegateFlowLayout> delegate;
 
-@property (nonatomic, assign)BOOL isCanExit;//标记是否可以退出
+@property (nonatomic, assign)BOOL isCancelConditionSucceed;//标记退出条件是否成功
+@property (nonatomic, assign)BOOL isExitEnabled;//能否退出
 
 @end
 
@@ -127,7 +128,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 
 - (void)initCommon{
 
-    self.isCanExit = YES;
+    self.isExitEnabled = NO;
+    self.isCancelConditionSucceed = YES;
     
     self.scrollingSpeed = 200.f;
     self.scrollingTriggerEdgeInsets = _scrollingTriggerEdgeInsets = UIEdgeInsetsMake(5.0f, 5.0f, 5.0f, 5.0f);
@@ -160,15 +162,17 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
             if (strongSelf) {
             }
         }];
-    
-    
+}
+
+- (void)setCanExit{
     //如果一进来，snapshotView的位置就处于collectionView的外部， 则标记一下，不要退出，当进入CollectionView，在移动出来时，才退出
     if ([self isOutSideScrollViewFrame]){
-        self.isCanExit = NO;
+        self.isCancelConditionSucceed = NO;
     }
     
-}
     
+    self.isExitEnabled = YES;
+}
     
 #pragma mark - adjust seletectItemCell
 - (void)applyLayoutAttributes:(UICollectionViewLayoutAttributes *)layoutAttributes {
@@ -382,8 +386,8 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
         case UIGestureRecognizerStateBegan:
         case UIGestureRecognizerStateChanged: {
             
-            if (!self.isCanExit && [self isInScrollViewFrame]){
-                self.isCanExit = YES;
+            if (!self.isCancelConditionSucceed && [self isInScrollViewFrame]){
+                self.isCancelConditionSucceed = YES;
             }
             //如果在在scrollView之外，则退出
             if ([self checkOutSideofCollectionViewToExit]){
@@ -525,7 +529,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 - (BOOL)checkOutSideofCollectionViewToExit{
     
     
-    if ([self isOutSideScrollViewFrame] && self.isCanExit){
+    if ([self isOutSideScrollViewFrame] && self.isCancelConditionSucceed && self.isExitEnabled){
         if ([self.delegate respondsToSelector:@selector(cancelGroupSelectedItemAtIndexPath:withSnapShotView:)]){
             [self.delegate cancelGroupSelectedItemAtIndexPath:self.selectedItemCurrentIndexPath withSnapShotView:self.selectedSnapShotView];
         }
