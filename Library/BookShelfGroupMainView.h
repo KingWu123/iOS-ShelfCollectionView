@@ -29,10 +29,15 @@
 
 + (instancetype)loadFromNib;
 
-//书架界面分组时的初始化方法
-- (void)initWithItemData:(ItemData *)itemData groupedItemData:(NSArray<ItemData *> *)groupedItemData snapView:(UIView *)snapView;
 
-//直接打开分组界面的初始化方法
-- (void)initWithItemsData:(NSArray<ItemData *> *)groupedItemData;
+/**
+ *  打开分组界面的初始化方法
+ *
+ *  @param groupedItemData 分组里包含的所有的数据
+ *  @param snapView        从书架选中的书籍的截图，不为nil, 表面最后一个item被选中，要能直接进行拖动
+ *
+ *  （注：初始化时，groupedItemData的最后一项必须是要被进行分组的itemData）
+ */
+- (void)initWithItemsData:(NSArray<ItemData *> *)groupedItemData snapView:(UIView *)snapView;
 
 @end

@@ -70,13 +70,23 @@
 //是否打开分组功能， default is NO,
 @property (nonatomic, assign)BOOL groupEnabled;
 
+
 //分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
 - (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath withSnapShotView:(UIView *)snapShotView;
 
 //分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
-- (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath ;
+- (void)finishedGroupForItemAtGroupIndexPath:(NSIndexPath *)groupIndexPath;
 
-//分组界面是从 cell选中打开的。
-- (void)groupMainViewClickedOpened;
+/**
+ *  //分组界面将要打开
+ *
+ *  @param isClicked 是否是点击cell打开的
+ */
+- (void)groupMainViewWillOpened;
+
+//分组界面已经打开
+- (void)groupMainViewDidOpened;
+
+
 
 @end

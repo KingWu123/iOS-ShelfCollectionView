@@ -118,7 +118,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 @property (nonatomic, strong)NSIndexPath *groupingIndexPath;
 @property (nonatomic, assign)BookShelfGroupState groupState; //分组处于的状态
 @property (nonatomic, assign)BOOL isGestureEndWatingGroup;//手势结束是否在等待进入分组界面
-@property (nonatomic, assign)BOOL isGroupMainViewClickedOpened;//分组界面是否直接点击cell打开
+@property (nonatomic, assign)BOOL isGroupMainViewOpened;//分组界面是否直接点击cell打开
 
 @end
 
@@ -163,7 +163,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.gestureMoveDirection = BookShelfGestureMoveDirectionUnknown;
     
     self.groupState = BookShelfGroupReady;
-    self.isGroupMainViewClickedOpened = NO;
+    self.isGroupMainViewOpened = NO;
 
     _reorderEnabled = YES;
     _groupEnabled = NO;
@@ -462,17 +462,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:beginGroupForItemAtIndexPath:toGroupIndexPath:selectedSnapShotView:)]){
         [self.delegate collectionView:self.collectionView layout:self beginGroupForItemAtIndexPath:self.selectedItemCurrentIndexPath toGroupIndexPath:groupIndexPath selectedSnapShotView:self.selectedSnapShotView];
     }
-    
-    //为分组包装的view此时消失掉
-   [self viewOfGroupedItemBackToOriginView:groupIndexPath];
-}
-
-//分组界面是从 cell选中打开的。
-- (void)groupMainViewClickedOpened{
-   
-    self.isGroupMainViewClickedOpened = YES;
-    self.groupState = BookShelfGrouping;
-    [self invalidatesScrollTimer];
 }
 
 //分组失败的 状态清空处理
@@ -646,7 +635,6 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.isGestureEndWatingGroup = NO;
     self.groupState = BookShelfGrouping;
     [self invalidatesScrollTimer];
-    [self viewOfGroupedItemBackToOriginView:self.groupingIndexPath];
     
     BOOL isGroupingIndexPathAlreadyGrouped = NO;
     if (self.dataSource != nil && [self.dataSource respondsToSelector:@selector(collectionView:isGroupedItemAtIndexPath:)]){
@@ -659,6 +647,9 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     //如果将要进行分组的indexPath 已经是分组了，则不用打开分组界面，直接进行分组
     if (isGroupingIndexPathAlreadyGrouped){
+        
+        [self viewOfGroupedItemBackToOriginView:self.groupingIndexPath];
+        
         //告知不用打开分组，直接加入到分组即可
         if (self.delegate != nil && [self.delegate respondsToSelector:@selector(collectionView:layout:addItemAtIndexPath:unOpenGroupAtIndexPath:)]){
             [self.delegate collectionView:self.collectionView layout:self addItemAtIndexPath:self.selectedItemCurrentIndexPath unOpenGroupAtIndexPath:self.groupingIndexPath];
@@ -674,28 +665,54 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
 }
 
 
-#pragma mark - 分组界面打开后，回到书架界面
+#pragma mark - 分组界面 打开 和 关闭
+
+//分组界面将要打开
+- (void)groupMainViewWillOpened{
+    
+    self.isGroupMainViewOpened = YES;
+    
+    self.groupState = BookShelfGrouping;
+    [self invalidatesScrollTimer];
+    
+}
+
+//分组界面已经打开
+- (void)groupMainViewDidOpened{
+    
+    self.isGroupMainViewOpened = YES;
+
+    
+    self.selectedItemCurrentIndexPath  = nil;
+    self.snapShotViewScrollingCenter = CGPointZero;
+    self.snapShotViewPanTranslation = CGPointZero;
+    
+    [self invalidateLayout];
+}
+
+
 //分组界面打开， 用户取消了分组操作，一定要调用此接口 告知
 - (void)cancelGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath withSnapShotView:(UIView *)snapShotView{
     
     self.groupState = BookShelfGroupReady;
-    self.isGroupMainViewClickedOpened = NO;
+    self.isGroupMainViewOpened = NO;
   
     self.selectedItemCurrentIndexPath = itemIndexPath;
   
-    
     self.selectedSnapShotView = snapShotView;
     self.snapShotViewScrollingCenter = snapShotView.center;
     self.snapShotViewPanTranslation = CGPointZero;
     [self.panGestureRecognizer setTranslation:CGPointZero inView:self.selectedSnapShotViewParentView];
     
     [self invalidateLayout];
+    
+    self.groupingIndexPath = nil;
 }
 
 //分组界面打开， 用户完成了分组操作， 一定要调用此接口，告知
-- (void)finishedGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath{
+- (void)finishedGroupForItemAtGroupIndexPath:(NSIndexPath *)groupIndexPath{
     
-    self.isGroupMainViewClickedOpened = NO;
+    self.isGroupMainViewOpened = NO;
     self.groupState = BookShelfGroupReady;
     
     [self.selectedSnapShotView removeFromSuperview];
@@ -705,7 +722,11 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     self.snapShotViewScrollingCenter = CGPointZero;
     self.snapShotViewPanTranslation = CGPointZero;
     
+    [self viewOfGroupedItemBackToOriginView:groupIndexPath];
+    
     [self invalidateLayout];
+    
+    self.groupingIndexPath = nil;
     
 }
 
@@ -1148,7 +1169,7 @@ static NSString * const kBSCollectionViewKeyPath = @"collectionView";
     
     if ([self.panGestureRecognizer isEqual:gestureRecognizer]) {
        
-        return (self.selectedItemCurrentIndexPath != nil || self.isGroupMainViewClickedOpened);
+        return (self.selectedItemCurrentIndexPath != nil || self.isGroupMainViewOpened);
     }
     return YES;
 }
