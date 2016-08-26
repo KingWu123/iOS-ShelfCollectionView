@@ -17,15 +17,25 @@
 #import "UICollectionView+MathIndexPath.h"
 
 /**
- *  打开分组的方式有3种：
+ *  一： 打开分组的方式有3种：
  *  1. 直接点击cell打开，
- *  2. 拖动一个item到分组，手松开，分组打开。
+ *       (对应delegate方法： collectionView:didSelectItemAtIndexPath:);
+ *  2. 拖动一个item到一个不是分组的item上，手松开，分组打开。
+ *       (对应delegate方法： collectionView:layout:addItemAtIndexPath:andOpenGroupAtIndexPath:);
  *  3. 拖动一个item到分组，手没有松开，带着item的snapShot，分组打开。
- *  不管已什么方式打开，都是： 如果有选中的item，把item的数据合并到groupData里； 然后初始化分组界面，并打开分组；分组动画完后， 删除itemIndexPath对于的cell。
+ *       (对应delegate方法： collectionView:layout:beginGroupForItemAtIndexPath:toGroupIndexPath:selectedSnapShotView:)
  *
- * 取消分组：取消分组后， 在groupIndex前插入一个indexPath,让拖出来的item有位置可以放置
+ *  不管已什么方式打开，都是： 如果有选中的item，把item的数据合并到groupData里； 然后初始化分组界面，并打开分组；分组动画完后， 删除item对于的cell。
  *
- * 分组完成：退出分组界面，刷新数据
+ *  4. 分组不打开，却需要进行分组。 满足条件：拖动一个item到一个分组上，收松开，分组不用打开。 相对于第2点
+ *       (对应delegate方法：collectionView:layout:addItemAtIndexPath:unOpenGroupAtIndexPath:);
+ *
+ *
+ * 二： 取消分组：取消分组后， 在groupIndex前插入一个indexPath,让拖出来的item有位置可以放置
+ *       (对应delegate方法：cancelGroupInGroupViewWithItemData:withGroupData:withSnapShotView:);
+ *
+ * 三： 分组完成：退出分组界面，刷新数据。
+ *       (对应delegate方法：finishGroupInGroupViewWithGroupData:);
  */
 
 
