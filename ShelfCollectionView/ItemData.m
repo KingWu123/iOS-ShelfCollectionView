@@ -10,11 +10,10 @@
 
 
 @implementation ItemData
-- (instancetype)initWithTitle:(NSString *)title itemSize:(CGSize)itemSize{
+- (instancetype)initWithTitle:(NSString *)title{
     self = [super init];
     if (self){
         self.title = title;
-        self.itemSize = itemSize;
     }
     return self;
 }

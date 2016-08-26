@@ -12,7 +12,6 @@
 @interface ItemData : NSObject
 
 @property (nonatomic, strong)NSString *title;
-@property (nonatomic, assign)CGSize itemSize;
 
-- (instancetype)initWithTitle:(NSString *)title itemSize:(CGSize)itemSize;
+- (instancetype)initWithTitle:(NSString *)title;
 @end

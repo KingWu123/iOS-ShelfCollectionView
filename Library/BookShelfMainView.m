@@ -144,19 +144,15 @@
 
 }
 
+
 #pragma mark - UICollectionViewDelegateFlowLayout
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
     
-    id itemData = [self.modelSource objectAtIndex:indexPath.row];
+    float width = [[UIScreen mainScreen]bounds].size.width /3;
+    float height = width + 50;
+    return  CGSizeMake(width, height);
     
-    if ([itemData isKindOfClass:[ItemData class]]){
-        return ((ItemData *)[self.modelSource objectAtIndex:indexPath.row]).itemSize;
-    }else{
-        float width = [[UIScreen mainScreen]bounds].size.width /3;
-        float height = width + 50;
-        return  CGSizeMake(width, height);
-    }
 }
 
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section{
@@ -171,6 +167,7 @@
 }
 
 //did begin group  itemIndexPath to the groupIndexPath, with snapShotView
+//打开分组界面，此时手势没有松开，还可以继续移动选中的书籍
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout beginGroupForItemAtIndexPath:(NSIndexPath *)itemIndexPath toGroupIndexPath:(NSIndexPath *)groupIndexPath selectedSnapShotView:(UIView *)snaptShotView{
     
     self.selectedIndexPath = itemIndexPath;
@@ -203,6 +200,7 @@
 
 
 //add itemIndexPath to groupIndexPath mmediately, add open groupMainView.
+//打开分组界面，在此之前，手已经松开
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout addItemAtIndexPath:(NSIndexPath *)itemIndexPath andOpenGroupAtIndexPath:(NSIndexPath *)groupIndexPath{
     
     id itemData = [self.modelSource objectAtIndex:itemIndexPath.row];
@@ -225,6 +223,7 @@
 
 
 //add itemIndexPath to groupIndexPath mmediately, and not open groupMainView.
+//不用打开分组界面，直接进行分组的数据操作即可，在此之前，手已经松开
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout addItemAtIndexPath:(NSIndexPath *)itemIndexPath unOpenGroupAtIndexPath:(NSIndexPath *)groupIndexPath{
     
     id groupData = [self.modelSource objectAtIndex:groupIndexPath.row];

@@ -26,25 +26,13 @@
     // Do any additional setup after loading the view, typically from a nib.
     
    
-
-    //UICollectionViewLayoutAttributes
-
     //init modelSource
-    float width = [[UIScreen mainScreen]bounds].size.width /3;
-    
     NSMutableArray *groupItems = [[NSMutableArray alloc]init];
     self.modelSource = [[NSMutableArray alloc]init];
     for (int i=0; i<100; i++){
         
-        float height = width + 50;
-//        if (i%3 == 0){
-//            height += 15;
-//        }else if (i%3 == 1){
-//            height += 30;
-//        }
-        
-        CGSize itemSize = CGSizeMake(width, height);
-        ItemData *itemData = [[ItemData alloc]initWithTitle:[NSString stringWithFormat:@"L %d", i] itemSize:itemSize];
+
+        ItemData *itemData = [[ItemData alloc]initWithTitle:[NSString stringWithFormat:@"L %d", i]];
         
         
         if (i >= 10 && i<=13){
@@ -68,7 +56,7 @@
         }
     }
     
-    
+    //add BooksShelfMainView
     BookShelfMainView *bookShelfView = [BookShelfMainView loadFromNib];
     bookShelfView.frame = CGRectMake(0, 20, self.view.frame.size.width, self.view.frame.size.height - 20);
     [self.view addSubview:bookShelfView];
@@ -81,49 +69,6 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
-
-
-
-
-
-
-
-
-
-//
-//- (void)longPressGestureRecognizer1:(UILongPressGestureRecognizer *)recognizer{
-//    
-//    static CGPoint originCenter;
-//    if (recognizer.state == UIGestureRecognizerStateBegan){
-//        
-//        CGPoint location = [recognizer locationInView:self.collectionView];
-//        self.preLongGestureLocation = location;
-//        NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:location];
-//    
-//        
-//        [self.collectionView beginInteractiveMovementForItemAtIndexPath:indexPath];
-//        
-//        originCenter = [self.collectionView cellForItemAtIndexPath:indexPath].center;
-//        
-//    }else if (recognizer.state == UIGestureRecognizerStateChanged){
-//        
-//        CGPoint currentLoction = [recognizer locationInView:self.collectionView];
-//        CGPoint offset = CGPointMake(currentLoction.x - self.preLongGestureLocation.x, currentLoction.y - self.preLongGestureLocation.y);
-//        
-//        //self.preLongGestureLocation = currentLoction;
-//        
-//        
-//        [self.collectionView updateInteractiveMovementTargetPosition:CGPointMake(originCenter.x + offset.x, originCenter.y + offset.y)];
-//        
-//        
-//    }else if (recognizer.state == UIGestureRecognizerStateFailed || recognizer.state == UIGestureRecognizerStateEnded){
-//        
-//        [self.collectionView endInteractiveMovement];
-//    }
-//    
-//}
-
 
 
 @end
