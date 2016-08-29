@@ -11,7 +11,6 @@
 #import "BookCollectionViewCell.h"
 #import "BookGroupCollectionViewCell.h"
 
-#import "ItemData.h"
 #import "BookshelfCollectionViewFlowLayout.h"
 #import "BookShelfGroupMainView.h"
 #import "UICollectionView+MathIndexPath.h"
@@ -46,7 +45,7 @@
 
 @property (nonatomic, weak)BookshelfCollectionViewFlowLayout *bookShelfFlowLayout;
 
-@property (nonatomic, strong)NSMutableArray *modelSource;
+@property (nonatomic, strong)NSMutableArray *itemsDataArr;
 @property (nonatomic, strong)NSIndexPath *groupIndexPath;
 @property (nonatomic, assign)BOOL isGroupIndexOriginalIsGroup;//被分组的item原先是不是分组item
 
@@ -70,7 +69,7 @@
 }
 
 - (void)initWithData:(NSArray *)itemDatas{
-    self.modelSource = [[NSMutableArray alloc]initWithArray:itemDatas];
+    self.itemsDataArr = [[NSMutableArray alloc]initWithArray:itemDatas];
 }
 
 - (UICollectionViewLayout *)createLayout{
@@ -84,14 +83,14 @@
 
 #pragma mark - UICollectionViewDataSource
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
-    return [self.modelSource count];;
+    return [self.itemsDataArr count];;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
-    id itemData = [self.modelSource objectAtIndex:indexPath.row];
+    id itemData = [self.itemsDataArr objectAtIndex:indexPath.row];
 
-    if ([itemData isKindOfClass:[ItemData class]]){
+    if (![itemData isKindOfClass:[NSArray class]]){
         
         BookCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"BookCollectionViewCell" forIndexPath:indexPath];
         [cell initCellWithItemData:itemData];
@@ -110,13 +109,13 @@
 
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath*)destinationIndexPath{
     
-    id sourceObject = [self.modelSource objectAtIndex:sourceIndexPath.row];
-    [self.modelSource removeObjectAtIndex:sourceIndexPath.row];
-    [self.modelSource insertObject:sourceObject atIndex:destinationIndexPath.row];
+    id sourceObject = [self.itemsDataArr objectAtIndex:sourceIndexPath.row];
+    [self.itemsDataArr removeObjectAtIndex:sourceIndexPath.row];
+    [self.itemsDataArr insertObject:sourceObject atIndex:destinationIndexPath.row];
 }
 
 - (BOOL)collectionView:(UICollectionView *)collectionView isGroupedItemAtIndexPath:(NSIndexPath *)indexPath{
-    id itemData = [self.modelSource objectAtIndex:indexPath.row];
+    id itemData = [self.itemsDataArr objectAtIndex:indexPath.row];
     if ([itemData isKindOfClass:[NSArray class]]){
         return YES;
     }
@@ -126,7 +125,7 @@
 
 #pragma mark - UICollectionViewDelegate
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
-    id itemData = [self.modelSource objectAtIndex:indexPath.row];
+    id itemData = [self.itemsDataArr objectAtIndex:indexPath.row];
     
     //是否是分组，如果是分组，打开分组
     if ([self collectionView:collectionView isGroupedItemAtIndexPath:indexPath]){
@@ -181,7 +180,7 @@
     
     NSMutableArray *tempGroupData = nil;
     
-    id groupData = [self.modelSource objectAtIndex:groupIndexPath.row];
+    id groupData = [self.itemsDataArr objectAtIndex:groupIndexPath.row];
     if (![groupData isKindOfClass:[NSArray class]]){
         tempGroupData = [[NSMutableArray alloc]initWithObjects:groupData, nil];
         self.isGroupIndexOriginalIsGroup = NO;
@@ -190,7 +189,7 @@
         self.isGroupIndexOriginalIsGroup = YES;
     }
     
-    id itemData = [self.modelSource objectAtIndex:itemIndexPath.row];
+    id itemData = [self.itemsDataArr objectAtIndex:itemIndexPath.row];
     [tempGroupData addObject:itemData];
     
     
@@ -203,7 +202,7 @@
         [self.bookShelfFlowLayout groupMainViewDidOpened];
         
         //分组打开后，之前选中的item删除掉
-        [self.modelSource removeObject:itemData];
+        [self.itemsDataArr removeObject:itemData];
         [self.collectionView deleteItemsAtIndexPaths:@[itemIndexPath]];
         
         //groupindex是否前移
@@ -221,8 +220,8 @@
 //打开分组界面，在此之前，手已经松开。此时groupIndexPath cell一定不是一个分组
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout addItemAtIndexPath:(NSIndexPath *)itemIndexPath andOpenGroupAtIndexPath:(NSIndexPath *)groupIndexPath{
 
-    id itemData = [self.modelSource objectAtIndex:itemIndexPath.row];
-    id groupData = [self.modelSource objectAtIndex:groupIndexPath.row];
+    id itemData = [self.itemsDataArr objectAtIndex:itemIndexPath.row];
+    id groupData = [self.itemsDataArr objectAtIndex:groupIndexPath.row];
     
     
     NSMutableArray *tempGroupData = [[NSMutableArray alloc]init];
@@ -239,7 +238,7 @@
         [self.bookShelfFlowLayout groupMainViewDidOpened];
         
         //删除这个item数据 和 cell
-        [self.modelSource removeObject:itemData];
+        [self.itemsDataArr removeObject:itemData];
         [self.collectionView deleteItemsAtIndexPaths:@[itemIndexPath]];
         
         //groupindex是否前移
@@ -256,8 +255,8 @@
 //不用打开分组界面，直接进行分组的数据操作即可，在此之前，手已经松开
 - (void)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout addItemAtIndexPath:(NSIndexPath *)itemIndexPath unOpenGroupAtIndexPath:(NSIndexPath *)groupIndexPath{
     
-    id groupData = [self.modelSource objectAtIndex:groupIndexPath.row];
-    id itemData = [self.modelSource objectAtIndex:itemIndexPath.row];
+    id groupData = [self.itemsDataArr objectAtIndex:groupIndexPath.row];
+    id itemData = [self.itemsDataArr objectAtIndex:itemIndexPath.row];
     
     if(![groupData isKindOfClass:[NSArray class]]){
         return;
@@ -266,10 +265,10 @@
     //将数据添加到group中
     NSMutableArray *tempGroupArr = [[NSMutableArray alloc]initWithArray:groupData];
     [tempGroupArr addObject:itemData];
-    [self.modelSource replaceObjectAtIndex:groupIndexPath.row withObject:tempGroupArr];
+    [self.itemsDataArr replaceObjectAtIndex:groupIndexPath.row withObject:tempGroupArr];
 
     //删除这个item数据
-    [self.modelSource removeObject:itemData];
+    [self.itemsDataArr removeObject:itemData];
    
     //更新分组item和 groupItem
     [self.collectionView performBatchUpdates:^{
@@ -292,22 +291,22 @@
 
 #pragma mark - BookShelfGroupMainViewDelegate
 //用户取消了分组操作
-- (void)cancelGroupInGroupViewWithItemData:(ItemData *)itemData withGroupData:(NSArray<ItemData *> *)groupItemData withSnapShotView:(UIView *)snapShotView{
+- (void)cancelGroupInGroupViewWithItemData:(id)itemData withGroupData:(NSArray *)groupItemData withSnapShotView:(UIView *)snapShotView{
     
 
     //分组取消回来，item没有位置可以放，在groupIndex前放一个itemIndex
-    [self.modelSource insertObject:itemData atIndex:self.groupIndexPath.row];
+    [self.itemsDataArr insertObject:itemData atIndex:self.groupIndexPath.row];
     
     NSIndexPath *selectedIndexPath  = self.groupIndexPath;
     self.groupIndexPath = [self.collectionView nextIndexPathByCurrentIndexPath:selectedIndexPath];
     
     //如果之前是分组，直接换array数据
     if (self.isGroupIndexOriginalIsGroup){
-        [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
+        [self.itemsDataArr replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
 
     }else{
         //如果分组前， groupitem本身不是个分组，则取消退出来后，也要不是个分组
-        [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:[groupItemData objectAtIndex:0]];
+        [self.itemsDataArr replaceObjectAtIndex:self.groupIndexPath.row withObject:[groupItemData objectAtIndex:0]];
     }
     
    
@@ -317,7 +316,7 @@
 
         //如果没有了，把这一项删除掉
         if ([groupItemData isKindOfClass:[NSArray class]] && [groupItemData count] == 0){
-            [self.modelSource removeObjectAtIndex:self.groupIndexPath.row];
+            [self.itemsDataArr removeObjectAtIndex:self.groupIndexPath.row];
             [self.collectionView deleteItemsAtIndexPaths:@[selectedIndexPath]];
         }else{
             [self.collectionView reloadItemsAtIndexPaths:@[selectedIndexPath]];
@@ -338,10 +337,10 @@
 }
 
 //用户完成了分组操作
-- (void)finishGroupInGroupViewWithGroupData:(NSArray<ItemData *> *)groupItemData{
+- (void)finishGroupInGroupViewWithGroupData:(NSArray *)groupItemData{
 
     //合并分组的数据
-    [self.modelSource replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
+    [self.itemsDataArr replaceObjectAtIndex:self.groupIndexPath.row withObject:groupItemData];
     [self.collectionView reloadItemsAtIndexPaths: @[self.groupIndexPath]];
     
     

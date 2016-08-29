@@ -7,16 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "itemData.h"
 #import "BookshelfCollectionViewFlowLayout.h"
 
 @protocol BookShelfGroupMainViewDelegate <NSObject>
 
 //用户取消了分组操作
-- (void)cancelGroupInGroupViewWithItemData:(ItemData *)itemData withGroupData:(NSArray<ItemData *> *)groupItemData withSnapShotView:(UIView *)snapShotView;
+- (void)cancelGroupInGroupViewWithItemData:(id)itemData withGroupData:(NSArray *)groupItemData withSnapShotView:(UIView *)snapShotView;
 
 //用户完成了分组操作
-- (void)finishGroupInGroupViewWithGroupData:(NSArray<ItemData *> *)groupItemData;
+- (void)finishGroupInGroupViewWithGroupData:(NSArray *)groupItemData;
 
 
 @end
@@ -38,7 +37,7 @@
  *
  *  （注：初始化时，groupedItemData的最后一项必须是要被进行分组的itemData）
  */
-- (void)initWithItemsData:(NSArray<ItemData *> *)groupedItemData snapView:(UIView *)snapView;
+- (void)initWithItemsData:(NSArray *)groupedItemData snapView:(UIView *)snapView;
 
 //分组界面完全打开了（分组界面打开有个动画过程）
 - (void)didOpened;

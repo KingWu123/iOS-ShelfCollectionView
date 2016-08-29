@@ -20,7 +20,7 @@
 @property (weak, nonatomic) IBOutlet UIView *tabExitView;
 
 @property (nonatomic, strong)BookShelfGroupViewFlowLayout *groupFlowLayout;
-@property (nonatomic, strong)NSMutableArray<ItemData *> * allGroupItems;
+@property (nonatomic, strong)NSMutableArray* allGroupItems;
 
 
 @end
@@ -56,7 +56,7 @@
  * 
  *  （注：初始化时，groupedItemData的最后一项必须是要被进行分组的itemData）
  */
-- (void)initWithItemsData:(NSArray<ItemData *> *)groupedItemData snapView:(UIView *)snapView{
+- (void)initWithItemsData:(NSArray *)groupedItemData snapView:(UIView *)snapView{
     [self.allGroupItems removeAllObjects];
     [self.allGroupItems addObjectsFromArray:groupedItemData];
     
@@ -139,7 +139,7 @@
 //当拖动的item不再collectionView范围内时，取消分组
 - (void)cancelGroupSelectedItemAtIndexPath:(NSIndexPath *)itemIndexPath withSnapShotView:(UIView *)snapShotView{
     
-    ItemData *itemData = [self.allGroupItems objectAtIndex:itemIndexPath.row];
+    id itemData = [self.allGroupItems objectAtIndex:itemIndexPath.row];
     [self cancelGroupWithItemData:itemData withSnapShotView:snapShotView];
 }
 
@@ -173,7 +173,7 @@
     }
 }
 
-- (void)cancelGroupWithItemData:(ItemData *)itemData withSnapShotView:(UIView *)snapShotView{
+- (void)cancelGroupWithItemData:(id)itemData withSnapShotView:(UIView *)snapShotView{
     
     NSMutableArray *groupItems = [NSMutableArray arrayWithArray:self.allGroupItems];
     [groupItems removeObject:itemData];
